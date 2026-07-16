@@ -204,6 +204,19 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
   </div>
 </div>
 
+<div id="shareChooser" style="display:none; position:fixed; inset:0; background:rgba(10,15,40,.55); z-index:950; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:14px; padding:28px 30px; max-width:380px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,.35);">
+    <h2 style="margin:0 0 4px;">📥 Archivo recibido</h2>
+    <div class="sub" id="shareChooserFileName" style="margin-bottom:18px;"></div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn orange" id="shareChooseInforme">Cargar en Informe / Índice</button>
+      <button class="btn ghost" id="shareChooseA">Cargar como Población A (Comparar)</button>
+      <button class="btn ghost" id="shareChooseB">Cargar como Población B (Comparar)</button>
+      <button class="btn ghost sm" id="shareChooseCancel" style="margin-top:4px;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div id="appRoot" style="display:none;">
 
 <div class="topbar">
@@ -215,6 +228,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
   </div>
   <button class="tabbtn active" data-tab="tab-informe">Informe Genómico</button>
   <button class="tabbtn" data-tab="tab-indice">Índice de Selección</button>
+  <button class="tabbtn" data-tab="tab-comparar">Comparar Poblaciones</button>
   <button id="btnInstallApp" class="btn orange sm" style="display:none; margin-left:auto;">📲 Instalar app</button>
 </div>
 
@@ -393,6 +407,71 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 
   </section>
 
+  <!-- ============ TAB 3: COMPARAR POBLACIONES ============ -->
+  <section id="tab-comparar" class="tab">
+
+    <div class="card">
+      <h2>Comparar dos poblaciones</h2>
+      <div class="sub">Cargá dos Excel por separado — pueden ser el mismo cliente en dos fechas distintas, dos lotes, o dos clientes diferentes. No se mezclan con lo que tengas cargado en las otras pestañas.</div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:10px;">
+        <div>
+          <div class="field" style="margin-bottom:10px;"><label>Nombre / etiqueta de la Población A</label><input id="popALabel" placeholder="Ej: 2025, o Rodeo Norte"></div>
+          <div class="dropzone" id="dropzoneA" style="padding:22px 14px;">
+            <div class="ico" style="font-size:26px;">📄</div>
+            <div><b>Población A</b> — clic o arrastrar</div>
+            <div id="popAStatus" style="font-size:12px;color:var(--gray);margin-top:6px;">Sin archivo cargado</div>
+            <input type="file" id="fileInputA" accept=".xlsx,.xls">
+          </div>
+        </div>
+        <div>
+          <div class="field" style="margin-bottom:10px;"><label>Nombre / etiqueta de la Población B</label><input id="popBLabel" placeholder="Ej: 2026, o Rodeo Sur"></div>
+          <div class="dropzone" id="dropzoneB" style="padding:22px 14px;">
+            <div class="ico" style="font-size:26px;">📄</div>
+            <div><b>Población B</b> — clic o arrastrar</div>
+            <div id="popBStatus" style="font-size:12px;color:var(--gray);margin-top:6px;">Sin archivo cargado</div>
+            <input type="file" id="fileInputB" accept=".xlsx,.xls">
+          </div>
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn orange" id="btnCompararPoblaciones" disabled>Comparar</button>
+        <button class="btn ghost" id="btnExportCompararExcel" disabled>Exportar Excel</button>
+        <button class="btn ghost" id="btnExportCompararPdf" disabled>Exportar PDF</button>
+      </div>
+
+      <div id="compararEmptyHint" class="empty-hint">Cargá los dos archivos para habilitar la comparación.</div>
+
+      <div id="compararResults" style="display:none; margin-top:10px;">
+        <div class="summary-grid">
+          <div class="stat"><div class="n" id="compStatA">-</div><div class="l" id="compStatALabel">Animales — Población A</div></div>
+          <div class="stat"><div class="n" id="compStatB">-</div><div class="l" id="compStatBLabel">Animales — Población B</div></div>
+          <div class="stat"><div class="n" id="compStatCommon">-</div><div class="l">Variables en común</div></div>
+        </div>
+        <div id="compVarMismatchNote" style="display:none; font-size:12px; color:var(--gray); margin-top:8px;"></div>
+
+        <h2 style="margin-top:24px;">Comparación por variable</h2>
+        <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
+          <canvas id="compBarChart" height="90"></canvas>
+        </div>
+
+        <table class="results-table" id="compTable" style="margin-top:16px;">
+          <thead><tr><th>Variable</th><th id="compTableHeadA">A</th><th id="compTableHeadB">B</th><th>Diferencia (B − A)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h2 style="margin-top:26px;">Telarañas comparadas</h2>
+        <div id="compRadarGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><canvas id="compRadar-0"></canvas></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><canvas id="compRadar-1"></canvas></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><canvas id="compRadar-2"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
 </main>
 
 </div><!-- /appRoot -->
@@ -518,7 +597,8 @@ function tryUnlock(clientName, key, silent){
   document.getElementById('licClientName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('licKeyInput').focus(); });
   document.getElementById('licKeyInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('licSubmit').click(); });
   document.getElementById('licSubmit').addEventListener('click', ()=>{
-    tryUnlock(document.getElementById('licClientName').value, document.getElementById('licKeyInput').value, false);
+    const ok = tryUnlock(document.getElementById('licClientName').value, document.getElementById('licKeyInput').value, false);
+    if(ok && typeof maybeShowShareChooser==='function') maybeShowShareChooser();
   });
 })();
 let customerName = '';
@@ -584,84 +664,80 @@ function handleFile(file){
 
 function norm(s){ return (s===null||s===undefined) ? '' : String(s).trim(); }
 
-function parseWorkbookRows(rows){
-  // 1. cliente
-  customerName = '';
+function parseWorkbook(rows){
+  // función pura: no toca el estado global, devuelve {customerName, catalog, animals, excludedIds} o {error}
+  let customerNameLocal = '';
   let headerRowIdx = -1;
   for(let i=0;i<rows.length;i++){
     const r = rows[i];
     if(!r) continue;
-    if(norm(r[0]).toLowerCase()==='customer name'){ customerName = norm(r[1]); }
+    if(norm(r[0]).toLowerCase()==='customer name'){ customerNameLocal = norm(r[1]); }
     if(norm(r[0]).toLowerCase()==='etiqueta de oreja'){ headerRowIdx = i; break; }
   }
   if(headerRowIdx===-1){
-    alert('No se encontró la fila de encabezados ("Etiqueta de Oreja"). Verificá el formato del archivo.');
-    return;
+    return { error: 'No se encontró la fila de encabezados ("Etiqueta de Oreja"). Verificá el formato del archivo.' };
   }
   const header = rows[headerRowIdx].map(norm);
 
-  // 2. detectar variables: columna i es "trait" si columna i+1 contiene RANGO o RANK
   const EXCLUDE = new Set(['etiqueta de oreja','sexo','fecha de nacimiento','nombre animal','products','eid','raza']);
-  catalog = [];
+  const catalogLocal = [];
   const seen = new Set();
   for(let i=0;i<header.length-1;i++){
     const h = header[i];
     const hNext = header[i+1];
     if(!h) continue;
     if(EXCLUDE.has(h.toLowerCase())) continue;
-    if(/rango|rank/i.test(h)) continue; // no encadenar
+    if(/rango|rank/i.test(h)) continue;
     if(/rango|rank/i.test(hNext)){
       const label = prettyLabel(h);
       if(seen.has(label)) continue;
       seen.add(label);
-      catalog.push({
-        key: label,
-        rawLabel: h,
-        rawIdx: i,
-        pctIdx: i+1,
-        category: guessCategory(h),
-        invert: false // false = "mejor" tiende a 1 (periferia) | true = "mejor" tiende a 100 (periferia)
+      catalogLocal.push({
+        key: label, rawLabel: h, rawIdx: i, pctIdx: i+1,
+        category: guessCategory(h), invert: false
       });
     }
   }
 
-  // 3. animales
-  animals = [];
+  let animalsLocal = [];
   for(let r=headerRowIdx+1; r<rows.length; r++){
     const row = rows[r];
     if(!row) continue;
     const id = row[0];
     if(id===null || id===undefined || norm(id)==='') continue;
     const a = {
-      id: norm(id),
-      sexo: norm(row[1]),
-      fechaNac: norm(row[2]),
-      nombre: norm(row[3]),
-      eid: norm(row[5]),
-      raza: norm(row[6]),
-      vals: {}
+      id: norm(id), sexo: norm(row[1]), fechaNac: norm(row[2]), nombre: norm(row[3]),
+      eid: norm(row[5]), raza: norm(row[6]), vals: {}
     };
-    catalog.forEach(v=>{
+    catalogLocal.forEach(v=>{
       const raw = row[v.rawIdx];
       const pct = row[v.pctIdx];
       a.vals[v.key] = { raw: (raw===undefined?null:raw), pct: (pct===undefined||pct===null)?null:Number(pct) };
     });
-    animals.push(a);
+    animalsLocal.push(a);
   }
 
-  // 3b. excluir animales sin ningún dato genómico (todas las variables en blanco)
-  excludedAnimalIds = [];
-  animals = animals.filter(a=>{
-    const hasAnyData = catalog.some(v=> a.vals[v.key].pct !== null || a.vals[v.key].raw !== null);
-    if(!hasAnyData){ excludedAnimalIds.push(a.id); return false; }
+  const excludedIds = [];
+  animalsLocal = animalsLocal.filter(a=>{
+    const hasAnyData = catalogLocal.some(v=> a.vals[v.key].pct !== null || a.vals[v.key].raw !== null);
+    if(!hasAnyData){ excludedIds.push(a.id); return false; }
     return true;
   });
 
-  if(animals.length===0){
-    alert('No se detectaron animales con datos genómicos en el archivo.');
-    return;
+  if(animalsLocal.length===0){
+    return { error: 'No se detectaron animales con datos genómicos en el archivo.' };
   }
 
+  return { customerName: customerNameLocal, catalog: catalogLocal, animals: animalsLocal, excludedIds };
+}
+
+function parseWorkbookRows(rows){
+  const res = parseWorkbook(rows);
+  if(res.error){ alert(res.error); return; }
+  customerName = res.customerName;
+  catalog = res.catalog;
+  animals = res.animals;
+  excludedAnimalIds = res.excludedIds;
   renderSummary();
 }
 
@@ -1698,6 +1774,210 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   };
   reader.readAsText(file);
 });
+
+/* ============================================================
+   COMPARAR POBLACIONES (independiente del resto de la app)
+============================================================ */
+let popA = null; // {label, customerName, catalog, animals}
+let popB = null;
+let compBarChartInstance = null;
+let compRadarCharts = [];
+
+function setupPopDropzone(dzId, inputId, statusId, onLoaded){
+  const dz = document.getElementById(dzId);
+  const input = document.getElementById(inputId);
+  const status = document.getElementById(statusId);
+  dz.addEventListener('click', ()=> input.click());
+  dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', ()=> dz.classList.remove('drag'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault(); dz.classList.remove('drag');
+    if(e.dataTransfer.files.length) loadPopFile(e.dataTransfer.files[0], status, onLoaded);
+  });
+  input.addEventListener('change', e=>{
+    if(e.target.files.length) loadPopFile(e.target.files[0], status, onLoaded);
+  });
+}
+
+function loadPopFile(file, statusEl, onLoaded){
+  statusEl.textContent = 'Leyendo archivo...';
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:false});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:null});
+      const res = parseWorkbook(rows);
+      if(res.error){ statusEl.textContent = '❌ ' + res.error; return; }
+      statusEl.textContent = `✅ ${res.animals.length} animales${res.excludedIds.length? ' ('+res.excludedIds.length+' excluidos sin datos)':''}`;
+      onLoaded(res);
+    }catch(err){
+      statusEl.textContent = '❌ No se pudo leer el archivo: '+err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+setupPopDropzone('dropzoneA','fileInputA','popAStatus', (res)=>{
+  popA = { label: document.getElementById('popALabel').value.trim() || res.customerName || 'Población A', ...res };
+  checkCompararReady();
+});
+setupPopDropzone('dropzoneB','fileInputB','popBStatus', (res)=>{
+  popB = { label: document.getElementById('popBLabel').value.trim() || res.customerName || 'Población B', ...res };
+  checkCompararReady();
+});
+function checkCompararReady(){
+  document.getElementById('btnCompararPoblaciones').disabled = !(popA && popB);
+}
+
+document.getElementById('btnCompararPoblaciones').addEventListener('click', renderComparacion);
+
+function popAvgPct(pop, key){
+  const vals = pop.animals.map(a=> a.vals[key] ? a.vals[key].pct : null).filter(x=>x!==null && !isNaN(x));
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+
+function renderComparacion(){
+  if(!popA || !popB) return;
+  popA.label = document.getElementById('popALabel').value.trim() || popA.customerName || 'Población A';
+  popB.label = document.getElementById('popBLabel').value.trim() || popB.customerName || 'Población B';
+
+  const keysA = new Set(popA.catalog.map(v=>v.key));
+  const keysB = new Set(popB.catalog.map(v=>v.key));
+  const commonKeys = popA.catalog.filter(v=>keysB.has(v.key));
+  const onlyA = popA.catalog.filter(v=>!keysB.has(v.key)).map(v=>v.key);
+  const onlyB = popB.catalog.filter(v=>!keysA.has(v.key)).map(v=>v.key);
+
+  document.getElementById('compararEmptyHint').style.display='none';
+  document.getElementById('compararResults').style.display='block';
+  document.getElementById('compStatA').textContent = popA.animals.length;
+  document.getElementById('compStatALabel').textContent = 'Animales — ' + popA.label;
+  document.getElementById('compStatB').textContent = popB.animals.length;
+  document.getElementById('compStatBLabel').textContent = 'Animales — ' + popB.label;
+  document.getElementById('compStatCommon').textContent = commonKeys.length;
+
+  const mismatchNote = document.getElementById('compVarMismatchNote');
+  if(onlyA.length || onlyB.length){
+    mismatchNote.style.display = 'block';
+    mismatchNote.innerHTML = (onlyA.length? `Solo en ${popA.label}: ${onlyA.join(', ')}. `:'') + (onlyB.length? `Solo en ${popB.label}: ${onlyB.join(', ')}.`:'');
+  } else {
+    mismatchNote.style.display = 'none';
+  }
+
+  // ---- tabla + datos para el gráfico ----
+  const rows = commonKeys.map(v=>{
+    const a = popAvgPct(popA, v.key);
+    const b = popAvgPct(popB, v.key);
+    return { key:v.key, a, b, diff: (a!==null && b!==null) ? (b-a) : null };
+  });
+  document.getElementById('compTableHeadA').textContent = popA.label;
+  document.getElementById('compTableHeadB').textContent = popB.label;
+  const tbody = document.querySelector('#compTable tbody');
+  tbody.innerHTML = rows.map(r=>`
+    <tr><td>${r.key}</td><td>${r.a===null?'-':fmt(r.a)}</td><td>${r.b===null?'-':fmt(r.b)}</td>
+    <td style="font-weight:700; color:${r.diff===null?'#999':(r.diff>=0?'#1e7a3c':'#c0392b')};">${r.diff===null?'-':(r.diff>=0?'+':'')+fmt(r.diff)}</td></tr>`).join('');
+
+  // ---- gráfico de barras comparativo ----
+  if(compBarChartInstance) compBarChartInstance.destroy();
+  compBarChartInstance = new Chart(document.getElementById('compBarChart'), {
+    type:'bar',
+    data:{
+      labels: rows.map(r=>r.key),
+      datasets:[
+        { label:popA.label, data: rows.map(r=>r.a), backgroundColor:'#5b9bd5' },
+        { label:popB.label, data: rows.map(r=>r.b), backgroundColor:'#d99a4e' }
+      ]
+    },
+    options:{
+      responsive:true, animation:false,
+      scales:{ y:{ min:0, max:100, title:{display:true, text:'Percentil promedio'} } },
+      plugins:{ legend:{position:'bottom'} }
+    }
+  });
+
+  // ---- telarañas comparadas (3 categorías, usando la categorización de Población A) ----
+  compRadarCharts.forEach(c=>c.destroy());
+  compRadarCharts = [];
+  for(let c=0;c<3;c++){
+    const outerDiv = document.querySelector(`#compRadarGrid > div:nth-child(${c+1})`);
+    const vars = commonKeys.filter(v=>v.category===c);
+    if(!vars.length){
+      outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="empty-hint" style="padding:40px 0;">Sin variables en esta categoría</div>`;
+      continue;
+    }
+    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><canvas id="compRadar-${c}"></canvas>`;
+    const canvas = document.getElementById('compRadar-'+c);
+    const chart = new Chart(canvas, {
+      type:'radar',
+      data:{
+        labels: vars.map(v=>v.key),
+        datasets:[
+          { label:popA.label, data: vars.map(v=>popAvgPct(popA,v.key)), borderColor:'#5b9bd5', backgroundColor:'#5b9bd522', pointBackgroundColor:'#5b9bd5', borderWidth:2 },
+          { label:popB.label, data: vars.map(v=>popAvgPct(popB,v.key)), borderColor:'#d99a4e', backgroundColor:'#d99a4e22', pointBackgroundColor:'#d99a4e', borderWidth:2 }
+        ]
+      },
+      options:{
+        animation:false, responsive:true,
+        scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:8}, backdropColor:'transparent'}, pointLabels:{font:{size:9}} } },
+        plugins:{ legend:{position:'bottom', labels:{font:{size:10}, boxWidth:10}} }
+      }
+    });
+    compRadarCharts.push(chart);
+  }
+
+  document.getElementById('btnExportCompararExcel').disabled = false;
+  document.getElementById('btnExportCompararPdf').disabled = false;
+  document.getElementById('compararResults').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('btnExportCompararExcel').addEventListener('click', ()=>{
+  if(!popA || !popB) return;
+  const keysB = new Set(popB.catalog.map(v=>v.key));
+  const commonKeys = popA.catalog.filter(v=>keysB.has(v.key));
+  const rows = [['Variable', popA.label, popB.label, 'Diferencia (B-A)']];
+  commonKeys.forEach(v=>{
+    const a = popAvgPct(popA, v.key), b = popAvgPct(popB, v.key);
+    rows.push([v.key, a===null?'':Number(a.toFixed(2)), b===null?'':Number(b.toFixed(2)), (a!==null&&b!==null)?Number((b-a).toFixed(2)):'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Comparación');
+  XLSX.writeFile(wb, `Comparacion_${popA.label}_vs_${popB.label}`.replace(/[^a-z0-9_]+/gi,'_')+'.xlsx');
+});
+
+document.getElementById('btnExportCompararPdf').addEventListener('click', ()=>{
+  if(!popA || !popB) return;
+  const keysB = new Set(popB.catalog.map(v=>v.key));
+  const commonKeys = popA.catalog.filter(v=>keysB.has(v.key));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
+  const pageW = doc.internal.pageSize.getWidth();
+  doc.setFontSize(16); doc.setTextColor(11,20,66);
+  doc.text(`AltaGEN Beef — Comparación: ${popA.label} vs ${popB.label}`, 14, 16);
+  doc.setFontSize(10); doc.setTextColor(60,60,60);
+  doc.text(`${popA.label}: ${popA.animals.length} animales   |   ${popB.label}: ${popB.animals.length} animales   |   Fecha: ${new Date().toLocaleDateString('es-AR')}`, 14, 23);
+
+  const rows = commonKeys.map(v=>{
+    const a = popAvgPct(popA, v.key), b = popAvgPct(popB, v.key);
+    return [v.key, a===null?'-':fmt(a), b===null?'-':fmt(b), (a!==null&&b!==null)?((b-a>=0?'+':'')+fmt(b-a)):'-'];
+  });
+  doc.autoTable({ startY:30, head:[['Variable', popA.label, popB.label, 'Diferencia']], body:rows, styles:{fontSize:8}, headStyles:{fillColor:[11,20,66]}, margin:{left:14,right:14}, tableWidth: pageW-28 });
+
+  if(compBarChartInstance){
+    const canvasEl = document.getElementById('compBarChart');
+    const aspect = canvasEl.height / canvasEl.width;
+    const imgW = pageW - 28;
+    const imgH = Math.min(imgW*aspect, 120);
+    let y = doc.lastAutoTable.finalY + 10;
+    if(y + imgH + 10 > doc.internal.pageSize.getHeight()){ doc.addPage('a4','landscape'); y = 16; }
+    doc.text('Comparación por variable:', 14, y);
+    doc.addImage(compBarChartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
+  }
+
+  doc.save(`Comparacion_${popA.label}_vs_${popB.label}`.replace(/[^a-z0-9_]+/gi,'_')+'.pdf');
+});
 </script>
 
 <script>
@@ -1734,6 +2014,9 @@ window.addEventListener('DOMContentLoaded', ()=>{
 });
 
 // 3. Recibir el Excel compartido desde WhatsApp (u otra app) vía Web Share Target
+//    En vez de cargarlo directo, se muestra un selector para elegir el destino
+//    (Informe/Índice, Población A o Población B), así se pueden reenviar dos
+//    archivos seguidos para compararlos.
 function openShareDB(){
   return new Promise((resolve,reject)=>{
     const req = indexedDB.open('altagen-share-db', 1);
@@ -1742,7 +2025,10 @@ function openShareDB(){
     req.onerror = ()=> reject(req.error);
   });
 }
-async function checkForSharedFile(){
+let pendingSharedFile = null;
+let shareFileReady = null; // guarda el archivo hasta que la licencia esté activada
+
+async function loadSharedFileIfAny(){
   if(new URLSearchParams(location.search).get('shared') !== '1') return;
   try{
     const db = await openShareDB();
@@ -1753,16 +2039,72 @@ async function checkForSharedFile(){
       req.onerror = ()=> reject(req.error);
     });
     if(file){
-      // reutiliza exactamente la misma función que usa el botón de carga manual
-      handleFile(file);
       const db2 = await openShareDB();
       const tx2 = db2.transaction('shared-files','readwrite');
       tx2.objectStore('shared-files').delete('pending');
+      shareFileReady = file;
+      maybeShowShareChooser();
     }
   }catch(e){ console.error('Error recibiendo archivo compartido:', e); }
   history.replaceState(null, '', location.pathname);
 }
-window.addEventListener('load', checkForSharedFile);
+
+// se llama en 'load' (por si ya estaba activada de antes) y de nuevo apenas
+// se activa manualmente la licencia, para no mostrar el selector con la app bloqueada
+function maybeShowShareChooser(){
+  if(!shareFileReady) return;
+  const unlocked = document.getElementById('appRoot').style.display !== 'none';
+  if(unlocked){
+    showShareChooser(shareFileReady);
+    shareFileReady = null;
+  }
+}
+
+function showShareChooser(file){
+  pendingSharedFile = file;
+  document.getElementById('shareChooserFileName').textContent = `"${file.name}" — elegí dónde cargarlo:`;
+  document.getElementById('shareChooser').style.display = 'flex';
+}
+function hideShareChooser(){
+  document.getElementById('shareChooser').style.display = 'none';
+  pendingSharedFile = null;
+}
+
+document.getElementById('shareChooseInforme').addEventListener('click', ()=>{
+  if(!pendingSharedFile) return;
+  const file = pendingSharedFile;
+  hideShareChooser();
+  document.querySelector('.tabbtn[data-tab="tab-informe"]').click();
+  handleFile(file); // reutiliza la carga manual normal
+});
+
+document.getElementById('shareChooseA').addEventListener('click', ()=>{
+  if(!pendingSharedFile) return;
+  const file = pendingSharedFile;
+  hideShareChooser();
+  document.querySelector('.tabbtn[data-tab="tab-comparar"]').click();
+  loadPopFile(file, document.getElementById('popAStatus'), (res)=>{
+    if(!document.getElementById('popALabel').value.trim()) document.getElementById('popALabel').value = res.customerName || file.name.replace(/\.(xlsx|xls)$/i,'');
+    popA = { label: document.getElementById('popALabel').value.trim() || res.customerName || 'Población A', ...res };
+    checkCompararReady();
+  });
+});
+
+document.getElementById('shareChooseB').addEventListener('click', ()=>{
+  if(!pendingSharedFile) return;
+  const file = pendingSharedFile;
+  hideShareChooser();
+  document.querySelector('.tabbtn[data-tab="tab-comparar"]').click();
+  loadPopFile(file, document.getElementById('popBStatus'), (res)=>{
+    if(!document.getElementById('popBLabel').value.trim()) document.getElementById('popBLabel').value = res.customerName || file.name.replace(/\.(xlsx|xls)$/i,'');
+    popB = { label: document.getElementById('popBLabel').value.trim() || res.customerName || 'Población B', ...res };
+    checkCompararReady();
+  });
+});
+
+document.getElementById('shareChooseCancel').addEventListener('click', hideShareChooser);
+
+window.addEventListener('load', loadSharedFileIfAny);
 </script>
 </body>
 </html>
