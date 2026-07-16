@@ -186,6 +186,53 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 .badge-count{ background:var(--orange); color:#fff; border-radius:20px; padding:1px 8px; font-size:11px; margin-left:6px;}
 
 @media print{ .topbar,.card,.idx-toolbar{ display:none !important; } }
+/* ============================================================
+   RESPONSIVE / MOBILE
+============================================================ */
+@media (max-width: 780px){
+  .topbar{ flex-wrap:wrap; padding:0 12px; }
+  .topbar .brand{ padding:10px 10px 10px 0; font-size:14px; }
+  .tabbtn{ padding:12px 10px; font-size:13px; }
+  #btnInstallApp{ margin-left:0 !important; order:99; width:100%; margin-top:4px; }
+
+  main{ padding:14px 10px 60px; }
+  .card{ padding:16px 14px; }
+
+  .summary-grid{ grid-template-columns:repeat(2,1fr); }
+
+  /* tablas: en vez de romper el layout, se dejan scrollear horizontalmente */
+  table.cfgtable, table.results-table{ display:block; overflow-x:auto; white-space:nowrap; }
+  .idx-vartable{ font-size:12px; }
+
+  .idx-toolbar{ flex-direction:column; align-items:stretch; }
+  .idx-toolbar .field, .idx-toolbar input, .idx-toolbar select{ min-width:0; width:100%; }
+  .mode-toggle{ width:100%; }
+  .mode-toggle button{ flex:1; font-size:10.5px; padding:7px 4px; }
+  .sign-toggle{ width:100%; }
+  .sign-toggle button{ flex:1; font-size:11px; }
+
+  /* grillas de 2 y 3 columnas -> 1 columna en mobile */
+  #rankRadarGrid, #compRadarGrid,
+  div[style*="grid-template-columns:repeat(3,1fr)"]{ grid-template-columns:1fr !important; }
+  div[style*="grid-template-columns:1fr 1fr"]{ grid-template-columns:1fr !important; }
+  .ficha-cols{ grid-template-columns:1fr !important; }
+  .team-grid{ grid-template-columns:1fr !important; }
+  .chart-row{ grid-template-columns:1fr !important; }
+
+  /* hojas del informe: se ven completas pero escaladas, con scroll horizontal si hace falta */
+  #reportPreview{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .report-page{ width:100%; min-width:340px; max-width:794px; min-height:auto; }
+
+  .btnrow{ flex-direction:column; }
+  .btnrow .btn{ width:100%; }
+  .history-item{ flex-direction:column; align-items:flex-start; gap:8px; }
+}
+
+@media (max-width: 420px){
+  .card h2{ font-size:15.5px; }
+  .stat .n{ font-size:18px; }
+  .tabbtn{ font-size:11.5px; padding:10px 6px; }
+}
 </style>
 </head>
 <body>
@@ -439,6 +486,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
         <button class="btn orange" id="btnCompararPoblaciones" disabled>Comparar</button>
         <button class="btn ghost" id="btnExportCompararExcel" disabled>Exportar Excel</button>
         <button class="btn ghost" id="btnExportCompararPdf" disabled>Exportar PDF</button>
+        <button class="btn ghost sm" id="btnClearPops">Borrar poblaciones cargadas</button>
       </div>
 
       <div id="compararEmptyHint" class="empty-hint">Cargá los dos archivos para habilitar la comparación.</div>
@@ -466,6 +514,37 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
           <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><canvas id="compRadar-0"></canvas></div>
           <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><canvas id="compRadar-1"></canvas></div>
           <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><canvas id="compRadar-2"></canvas></div>
+        </div>
+
+        <h2 style="margin-top:26px;">Clasificación según el Índice de Selección</h2>
+        <div class="sub">Aplica el último índice que calculaste en la pestaña "Índice de Selección" (mismas variables, pesos, signos y normalización) a cada población por separado, y las rankea cada una dentro de sí misma.</div>
+        <div class="btnrow" style="margin-top:0;">
+          <button class="btn ghost sm" id="btnAplicarIndiceComparar">Usar el último índice calculado</button>
+        </div>
+        <div id="compIdxEmptyHint" class="empty-hint">Todavía no aplicaste un índice a estas poblaciones.</div>
+        <div id="compIdxResults" style="display:none; margin-top:10px;">
+          <div id="compIdxWarning" style="display:none; background:#fff8ef; border:1px solid #f0d9b5; border-radius:8px; padding:10px 14px; font-size:12.5px; color:#7a5518; margin-bottom:14px;"></div>
+
+          <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <canvas id="compIdxChart" height="80"></canvas>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:16px;">
+            <div>
+              <h3 id="compIdxTableTitleA" style="font-size:14px;"></h3>
+              <table class="results-table" id="compIdxTableA"><thead><tr><th>Categoría</th><th>Cant.</th><th>Índice</th></tr></thead><tbody></tbody></table>
+            </div>
+            <div>
+              <h3 id="compIdxTableTitleB" style="font-size:14px;"></h3>
+              <table class="results-table" id="compIdxTableB"><thead><tr><th>Categoría</th><th>Cant.</th><th>Índice</th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+
+          <h3 style="margin-top:20px; font-size:14px;">Detalle combinado</h3>
+          <table class="results-table" id="compIdxDetailTable">
+            <thead><tr><th>Población</th><th>#</th><th>ID</th><th>Nombre</th><th>Categoría</th><th>Índice</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1783,6 +1862,34 @@ let popB = null;
 let compBarChartInstance = null;
 let compRadarCharts = [];
 
+const POP_STORE_KEY = 'altagen_populations_v1';
+function savePopsToStorage(){
+  try{
+    localStorage.setItem(POP_STORE_KEY, JSON.stringify({popA, popB}));
+  }catch(e){ console.warn('No se pudo guardar Población A/B (puede ser demasiado grande):', e); }
+}
+function restorePopsFromStorage(){
+  try{
+    const stored = JSON.parse(localStorage.getItem(POP_STORE_KEY));
+    if(!stored) return;
+    if(stored.popA){ popA = stored.popA; document.getElementById('popALabel').value = popA.label; document.getElementById('popAStatus').textContent = `✅ ${popA.animals.length} animales (recuperado)`; }
+    if(stored.popB){ popB = stored.popB; document.getElementById('popBLabel').value = popB.label; document.getElementById('popBStatus').textContent = `✅ ${popB.animals.length} animales (recuperado)`; }
+    checkCompararReady();
+  }catch(e){ console.warn('No se pudo restaurar Población A/B:', e); }
+}
+document.getElementById('btnClearPops').addEventListener('click', ()=>{
+  if(!confirm('¿Borrar las poblaciones A y B cargadas?')) return;
+  popA = null; popB = null;
+  localStorage.removeItem(POP_STORE_KEY);
+  document.getElementById('popALabel').value = ''; document.getElementById('popBLabel').value = '';
+  document.getElementById('popAStatus').textContent = 'Sin archivo cargado';
+  document.getElementById('popBStatus').textContent = 'Sin archivo cargado';
+  document.getElementById('compararResults').style.display = 'none';
+  document.getElementById('compararEmptyHint').style.display = 'block';
+  checkCompararReady();
+});
+restorePopsFromStorage();
+
 function setupPopDropzone(dzId, inputId, statusId, onLoaded){
   const dz = document.getElementById(dzId);
   const input = document.getElementById(inputId);
@@ -1821,10 +1928,12 @@ function loadPopFile(file, statusEl, onLoaded){
 
 setupPopDropzone('dropzoneA','fileInputA','popAStatus', (res)=>{
   popA = { label: document.getElementById('popALabel').value.trim() || res.customerName || 'Población A', ...res };
+  savePopsToStorage();
   checkCompararReady();
 });
 setupPopDropzone('dropzoneB','fileInputB','popBStatus', (res)=>{
   popB = { label: document.getElementById('popBLabel').value.trim() || res.customerName || 'Población B', ...res };
+  savePopsToStorage();
   checkCompararReady();
 });
 function checkCompararReady(){
@@ -1978,6 +2087,128 @@ document.getElementById('btnExportCompararPdf').addEventListener('click', ()=>{
 
   doc.save(`Comparacion_${popA.label}_vs_${popB.label}`.replace(/[^a-z0-9_]+/gi,'_')+'.pdf');
 });
+
+/* ---------- clasificación por índice aplicado a ambas poblaciones ---------- */
+function computeMinMaxFor(pop){
+  const mm = {};
+  pop.catalog.forEach(v=>{
+    const vals = pop.animals.map(a=> Number(a.vals[v.key] ? a.vals[v.key].raw : NaN)).filter(x=>!isNaN(x));
+    mm[v.key] = vals.length ? { min:Math.min(...vals), max:Math.max(...vals) } : { min:0, max:0 };
+  });
+  return mm;
+}
+function normalizedTraitValueFor(a, key, normMode, minMax){
+  if(normMode==='raw' || normMode==='raw_pbi'){
+    const raw = Number(a.vals[key] ? a.vals[key].raw : NaN);
+    const mm = minMax[key];
+    if(!mm || isNaN(raw) || mm.max===mm.min) return null;
+    return ((raw-mm.min)/(mm.max-mm.min))*100;
+  }
+  return a.vals[key] ? a.vals[key].pct : null;
+}
+function computeIndexForPopulation(pop, config, normMode, intercept){
+  const minMax = (normMode==='raw' || normMode==='raw_pbi') ? computeMinMaxFor(pop) : null;
+  const results = pop.animals.map(a=>{
+    let sum=0, weightedSum=0, usedWeight=0;
+    const traits = {};
+    config.forEach(c=>{
+      const dispVal = normalizedTraitValueFor(a, c.key, normMode, minMax);
+      traits[c.key] = dispVal;
+      if(dispVal===null || isNaN(dispVal)) return;
+      if(normMode==='raw_pbi'){
+        const valor01 = dispVal/100;
+        const ajustado = c.sign===1 ? valor01 : -valor01;
+        sum += ajustado*(c.weight/100);
+      } else {
+        const contrib = c.sign===1 ? dispVal : (100-dispVal);
+        weightedSum += contrib*c.weight;
+        usedWeight += c.weight;
+      }
+    });
+    const idx = normMode==='raw_pbi' ? (sum*100+(intercept||0)) : (usedWeight>0 ? weightedSum/usedWeight : 0);
+    return { id:a.id, nombre:a.nombre, sexo:a.sexo, idx, traits };
+  });
+  results.sort((a,b)=>b.idx-a.idx);
+  categorizeResults(results);
+  return results;
+}
+
+let compIdxChartInstance = null;
+
+document.getElementById('btnAplicarIndiceComparar').addEventListener('click', ()=>{
+  if(!popA || !popB) return;
+  if(!lastIdxResults){
+    alert('Primero calculá un índice en la pestaña "Índice de Selección".');
+    return;
+  }
+  const { config, normMode, intercept } = lastIdxResults;
+  const keysA = new Set(popA.catalog.map(v=>v.key));
+  const keysB = new Set(popB.catalog.map(v=>v.key));
+  const usableConfig = config.filter(c=> keysA.has(c.key) && keysB.has(c.key));
+  const dropped = config.filter(c=> !(keysA.has(c.key) && keysB.has(c.key))).map(c=>c.key);
+
+  const warnBox = document.getElementById('compIdxWarning');
+  if(!usableConfig.length){
+    alert('Ninguna de las variables del índice está presente en ambas poblaciones. No se puede aplicar.');
+    return;
+  }
+  if(dropped.length || normMode!=='percentile'){
+    warnBox.style.display = 'block';
+    let msg = '';
+    if(dropped.length) msg += `⚠️ Estas variables del índice no están en ambas poblaciones y se excluyeron de este cálculo: ${dropped.join(', ')}. `;
+    if(normMode!=='percentile') msg += `⚠️ El índice se calculó con normalización "${normMode==='raw'?'valor crudo simétrico':'estilo Power BI'}", que es relativa a cada lote — los valores de A y B no son directamente comparables entre sí en esa escala. Para comparar poblaciones de forma más confiable, te recomendamos recalcular el índice en modo "Percentil" en la pestaña Índice.`;
+    warnBox.textContent = msg;
+  } else {
+    warnBox.style.display = 'none';
+  }
+
+  const resultsA = computeIndexForPopulation(popA, usableConfig, normMode, intercept);
+  const resultsB = computeIndexForPopulation(popB, usableConfig, normMode, intercept);
+  const groupA = buildGroupSummary(resultsA, usableConfig);
+  const groupB = buildGroupSummary(resultsB, usableConfig);
+
+  document.getElementById('compIdxEmptyHint').style.display = 'none';
+  document.getElementById('compIdxResults').style.display = 'block';
+  document.getElementById('compIdxTableTitleA').textContent = popA.label;
+  document.getElementById('compIdxTableTitleB').textContent = popB.label;
+
+  const fillGroupTable = (id, rows)=>{
+    document.querySelector(`#${id} tbody`).innerHTML = rows.map(r=>`
+      <tr ${r.categ==='Total'?'style="font-weight:800;border-top:2px solid var(--navy);"':''}>
+        <td>${r.categ}</td><td>${r.cant}</td><td>${fmt(r.idx)}</td>
+      </tr>`).join('');
+  };
+  fillGroupTable('compIdxTableA', groupA);
+  fillGroupTable('compIdxTableB', groupB);
+
+  // gráfico: índice promedio por banda, A vs B
+  if(compIdxChartInstance) compIdxChartInstance.destroy();
+  const bands = RANK_BANDS;
+  compIdxChartInstance = new Chart(document.getElementById('compIdxChart'), {
+    type:'bar',
+    data:{
+      labels: bands,
+      datasets:[
+        { label:popA.label, data: bands.map(b=> (groupA.find(r=>r.categ===b)||{}).idx || 0), backgroundColor:'#5b9bd5' },
+        { label:popB.label, data: bands.map(b=> (groupB.find(r=>r.categ===b)||{}).idx || 0), backgroundColor:'#d99a4e' }
+      ]
+    },
+    options:{
+      responsive:true, animation:false,
+      scales:{ y:{ title:{display:true, text:'Índice promedio'} } },
+      plugins:{ legend:{position:'bottom'} }
+    }
+  });
+
+  // detalle combinado
+  const detRows = [
+    ...resultsA.map((r,i)=>({pop:popA.label, i, r})),
+    ...resultsB.map((r,i)=>({pop:popB.label, i, r}))
+  ];
+  document.querySelector('#compIdxDetailTable tbody').innerHTML = detRows.map(x=>`
+    <tr><td>${x.pop}</td><td class="rank">${x.i+1}</td><td>${x.r.id}</td><td>${x.r.nombre||'—'}</td><td>${x.r.categ}</td><td><b>${fmt(x.r.idx)}</b></td></tr>
+  `).join('');
+});
 </script>
 
 <script>
@@ -2016,7 +2247,9 @@ window.addEventListener('DOMContentLoaded', ()=>{
 // 3. Recibir el Excel compartido desde WhatsApp (u otra app) vía Web Share Target
 //    En vez de cargarlo directo, se muestra un selector para elegir el destino
 //    (Informe/Índice, Población A o Población B), así se pueden reenviar dos
-//    archivos seguidos para compararlos.
+//    archivos seguidos para compararlos. Población A/B además quedan
+//    guardadas en localStorage, para sobrevivir a la recarga que provoca
+//    cada share.
 function openShareDB(){
   return new Promise((resolve,reject)=>{
     const req = indexedDB.open('altagen-share-db', 1);
@@ -2049,8 +2282,6 @@ async function loadSharedFileIfAny(){
   history.replaceState(null, '', location.pathname);
 }
 
-// se llama en 'load' (por si ya estaba activada de antes) y de nuevo apenas
-// se activa manualmente la licencia, para no mostrar el selector con la app bloqueada
 function maybeShowShareChooser(){
   if(!shareFileReady) return;
   const unlocked = document.getElementById('appRoot').style.display !== 'none';
@@ -2086,6 +2317,7 @@ document.getElementById('shareChooseA').addEventListener('click', ()=>{
   loadPopFile(file, document.getElementById('popAStatus'), (res)=>{
     if(!document.getElementById('popALabel').value.trim()) document.getElementById('popALabel').value = res.customerName || file.name.replace(/\.(xlsx|xls)$/i,'');
     popA = { label: document.getElementById('popALabel').value.trim() || res.customerName || 'Población A', ...res };
+    savePopsToStorage();
     checkCompararReady();
   });
 });
@@ -2098,6 +2330,7 @@ document.getElementById('shareChooseB').addEventListener('click', ()=>{
   loadPopFile(file, document.getElementById('popBStatus'), (res)=>{
     if(!document.getElementById('popBLabel').value.trim()) document.getElementById('popBLabel').value = res.customerName || file.name.replace(/\.(xlsx|xls)$/i,'');
     popB = { label: document.getElementById('popBLabel').value.trim() || res.customerName || 'Población B', ...res };
+    savePopsToStorage();
     checkCompararReady();
   });
 });
