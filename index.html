@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AltaGEN Beef | Informes Genómicos e Índice de Selección</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b1442">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AltaGEN Beef">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+:root{
+  --navy:#0b1442;
+  --navy2:#101c4d;
+  --navy3:#182563;
+  --orange:#d99a4e;
+  --orange2:#c9853f;
+  --cream:#ecdcc0;
+  --blue:#2f8fd6;
+  --green:#1e6b3c;
+  --gray:#6b7280;
+  --lightgray:#f3f4f6;
+  --border:#e2e5ec;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:'Segoe UI',Arial,sans-serif; background:#f0f1f5; color:#1c2333;
+}
+.topbar{
+  background:var(--navy); color:#fff; padding:0 24px; display:flex; align-items:center; gap:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.25); position:sticky; top:0; z-index:50;
+}
+.topbar .brand{ display:flex; align-items:center; gap:10px; padding:14px 18px 14px 0; font-weight:700; letter-spacing:.5px;}
+.brand .mark{width:26px;height:26px; position:relative;}
+.brand .mark svg{width:100%;height:100%;}
+.tabbtn{
+  background:transparent; border:none; color:#c9d2ee; padding:16px 18px; font-size:14.5px; cursor:pointer;
+  border-bottom:3px solid transparent; font-weight:600;
+}
+.tabbtn.active{ color:#fff; border-bottom-color:var(--orange);}
+.tabbtn:hover{ color:#fff; }
+main{ max-width:1180px; margin:0 auto; padding:26px 18px 80px; }
+.tab{ display:none; } .tab.active{ display:block; }
+
+.card{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:20px; box-shadow:0 1px 3px rgba(20,20,40,.05);}
+.card h2{ margin:0 0 4px; font-size:17px; }
+.card .sub{ color:var(--gray); font-size:13.5px; margin-bottom:16px; }
+
+.dropzone{
+  border:2px dashed #c7cde0; border-radius:10px; padding:36px 20px; text-align:center; cursor:pointer;
+  background:#fafbfe; transition:.15s;
+}
+.dropzone:hover{ border-color:var(--blue); background:#f3f8ff; }
+.dropzone.drag{ border-color:var(--orange); background:#fff8ef; }
+.dropzone .ico{ font-size:34px; margin-bottom:8px; }
+.dropzone b{ color:var(--navy); }
+input[type=file]{ display:none; }
+
+.btn{
+  background:var(--navy); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-size:14px;
+  font-weight:600; cursor:pointer; transition:.15s;
+}
+.btn:hover{ background:var(--navy3); }
+.btn.orange{ background:var(--orange2); }
+.btn.orange:hover{ background:#b5762f; }
+.btn.ghost{ background:#fff; color:var(--navy); border:1.5px solid var(--border); }
+.btn.ghost:hover{ background:var(--lightgray); }
+.btn.sm{ padding:6px 12px; font-size:12.5px; border-radius:6px; }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btnrow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+
+.summary-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:6px;}
+.stat{ background:var(--lightgray); border-radius:10px; padding:14px 16px; }
+.stat .n{ font-size:22px; font-weight:800; color:var(--navy); }
+.stat .l{ font-size:12px; color:var(--gray); text-transform:uppercase; letter-spacing:.4px; }
+
+table.cfgtable{ width:100%; border-collapse:collapse; font-size:13.5px; margin-top:10px; }
+table.cfgtable th{ text-align:left; padding:8px 10px; background:var(--lightgray); color:var(--gray); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; border-bottom:1px solid var(--border);}
+table.cfgtable td{ padding:7px 10px; border-bottom:1px solid #eef0f5; vertical-align:middle;}
+table.cfgtable select, table.cfgtable input[type=number]{
+  padding:5px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; width:100%;
+}
+table.cfgtable tr:hover td{ background:#fafbfe; }
+.tag{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+.tag.g1{ background:#e6f0fb; color:#1f5fa8; }
+.tag.g2{ background:#eaf6ee; color:#1e7a3c; }
+.tag.g3{ background:#fdeee0; color:#b1541a; }
+.tag.g4{ background:#f0eefc; color:#5b3fb0; }
+
+#reportPreview{ margin-top:22px; }
+.report-page{
+  width:794px; min-height:1123px; background:#fff; margin:0 auto 26px; position:relative;
+  box-shadow:0 4px 18px rgba(20,20,40,.18); overflow:hidden; padding:0;
+}
+.pg-navy{ background:var(--navy); color:#fff; }
+.pg-pad{ padding:40px 44px; }
+.pg-logo-corner{ position:absolute; top:26px; right:34px; display:flex; align-items:center; gap:8px; }
+.pg-logo-corner .txt{ font-family:Georgia,serif; font-size:19px; letter-spacing:.5px; }
+.pg-logo-corner .txt b{ display:block; font-size:21px; letter-spacing:1px; }
+
+.altagen-mark{ display:flex; align-items:center; gap:12px; }
+.altagen-mark svg{ width:56px; height:56px; flex-shrink:0; }
+.altagen-mark .lbl{ font-family:Arial,sans-serif; font-weight:800; line-height:1.05; }
+.altagen-mark .lbl span{ display:block; font-size:20px; }
+.altagen-mark .lbl .a1{ color:var(--orange); }
+.altagen-mark .lbl .a2{ color:var(--orange2); }
+.altagen-mark .lbl .a3{ color:var(--navy); }
+
+.wave-bottom{ position:absolute; left:0; right:0; bottom:0; height:180px; overflow:hidden; }
+
+.section-bar{ background:var(--navy3); color:#fff; font-weight:700; font-size:14.5px; padding:9px 16px; border-radius:4px; letter-spacing:.3px; margin-bottom:16px;}
+.divider-page .section-bar{ font-size:22px; padding:16px 22px; margin:0; border-radius:0; }
+
+.team-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:14px; }
+.team-card{ display:flex; gap:12px; }
+.team-card .av{ width:52px; height:52px; border-radius:50%; background:var(--navy3); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0; font-size:16px;}
+.team-card .nm{ font-weight:700; font-size:13.5px; color:var(--navy); }
+.team-card .rl{ font-weight:600; font-size:11.5px; color:var(--orange2); margin:2px 0 4px;}
+.team-card .ds{ font-size:11.5px; color:#4b5266; line-height:1.4; }
+
+.steps-list{ margin-top:18px; display:flex; flex-direction:column; gap:14px; }
+.step-item{ display:flex; gap:14px; align-items:flex-start; }
+.step-item .num{ width:34px; height:34px; border-radius:50%; background:var(--orange); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;}
+.step-item .tx b{ display:block; color:var(--navy); font-size:13.5px; margin-bottom:2px;}
+.step-item .tx span{ font-size:12.5px; color:#4b5266; line-height:1.45; }
+
+.chart-row{ display:grid; grid-template-columns:1.1fr .9fr; gap:18px; margin-bottom:22px; align-items:center;}
+.chart-row canvas{ max-height:210px; }
+.mini-table{ width:100%; border-collapse:collapse; font-size:12px; }
+.mini-table th{ text-align:left; padding:4px 6px; color:var(--gray); border-bottom:1px solid var(--border); font-weight:600;}
+.mini-table td{ padding:4px 6px; border-bottom:1px solid #f0f1f5; }
+.mini-table td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+.scatter-block{ margin-bottom:18px; }
+.scatter-block .ttl{ text-align:center; font-weight:700; font-size:12.5px; color:var(--navy); margin-bottom:4px;}
+.scatter-block canvas{ max-height:150px; }
+
+.ficha-block{ border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
+.ficha-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:2px solid var(--navy3); padding-bottom:6px;}
+.ficha-head .idbox{ font-size:11px; color:var(--gray); }
+.ficha-head .idbox b{ display:block; font-size:15px; color:var(--navy); }
+.ficha-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.ficha-cols h4{ font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--orange2); margin:0 0 6px;}
+
+.footer-note{ font-size:11px; color:var(--gray); position:absolute; bottom:16px; left:44px; }
+
+/* Índice de selección */
+.idx-toolbar{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;}
+.field{ display:flex; flex-direction:column; gap:4px; }
+.field label{ font-size:12px; color:var(--gray); font-weight:600; }
+.field input, .field select{ padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-size:13.5px; min-width:200px;}
+.idx-vartable input[type=number]{ width:70px; }
+.sign-toggle{ display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; width:fit-content;}
+.sign-toggle button{ border:none; background:#fff; padding:5px 10px; font-size:12px; cursor:pointer; font-weight:700;}
+.sign-toggle button.pos.active{ background:#e6f6ea; color:#1e7a3c; }
+.sign-toggle button.neg.active{ background:#fdeaea; color:#b1301a; }
+.mode-toggle{ display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; width:fit-content;}
+.mode-toggle button{ border:none; border-right:1px solid var(--border); background:#fff; padding:7px 12px; font-size:12px; cursor:pointer; font-weight:700; color:#4b5266; white-space:nowrap;}
+.mode-toggle button:last-child{ border-right:none; }
+.mode-toggle button.active{ background:var(--navy); color:#fff; }
+
+.results-table{ width:100%; border-collapse:collapse; font-size:13.5px; margin-top:14px;}
+.results-table th{ background:var(--navy); color:#fff; padding:9px 12px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.3px;}
+.results-table td{ padding:8px 12px; border-bottom:1px solid var(--border); }
+.results-table tr:nth-child(even) td{ background:#fafbfe; }
+.results-table td.rank{ font-weight:800; color:var(--orange2); width:40px; }
+
+.history-list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.history-item{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border:1px solid var(--border); border-radius:8px; }
+.history-item .meta b{ display:block; font-size:13.5px; color:var(--navy); }
+.history-item .meta span{ font-size:11.5px; color:var(--gray); }
+.history-item .acts{ display:flex; gap:6px; }
+
+.empty-hint{ color:var(--gray); font-size:13.5px; padding:20px 0; text-align:center; }
+.badge-count{ background:var(--orange); color:#fff; border-radius:20px; padding:1px 8px; font-size:11px; margin-left:6px;}
+
+@media print{ .topbar,.card,.idx-toolbar{ display:none !important; } }
+</style>
+</head>
+<body>
+
+<div id="licenseGate" style="position:fixed; inset:0; background:var(--navy); z-index:999; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:14px; padding:36px 38px; max-width:400px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,.35);">
+    <div class="altagen-mark" style="justify-content:center; margin-bottom:16px;">
+      <svg viewBox="0 0 40 40" width="46" height="46"><polygon points="20,2 38,20 20,38 2,20" fill="#d99a4e"/><path d="M20 38 L2 20 L38 20 Z" fill="#c9853f" opacity="0.9"/></svg>
+    </div>
+    <h2 style="text-align:center; margin:0 0 4px;">Activación requerida</h2>
+    <div class="sub" style="text-align:center; margin-bottom:20px;">Ingresá el nombre del cliente y la clave de acceso que te dieron para usar esta herramienta.</div>
+    <div class="field"><label>Nombre del cliente</label><input id="licClientName" placeholder="Igual que te lo dieron" style="width:100%;"></div>
+    <div class="field" style="margin-top:12px;"><label>Clave de acceso</label><input id="licKeyInput" placeholder="Ej: 2026-A1B2C3D4" style="width:100%; text-transform:uppercase;"></div>
+    <button class="btn orange" id="licSubmit" style="width:100%; margin-top:18px;">Activar</button>
+    <div id="licError" style="color:#b1301a; font-size:12.5px; margin-top:10px; text-align:center; min-height:16px;"></div>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">
+      <svg viewBox="0 0 40 40"><polygon points="20,2 38,20 20,38 2,20" fill="#d99a4e"/><path d="M20 38 L2 20 L38 20 Z" fill="#c9853f" opacity="0.85"/></svg>
+    </span>
+    AltaGEN Beef
+  </div>
+  <button class="tabbtn active" data-tab="tab-informe">Informe Genómico</button>
+  <button class="tabbtn" data-tab="tab-indice">Índice de Selección</button>
+  <button id="btnInstallApp" class="btn orange sm" style="display:none; margin-left:auto;">📲 Instalar app</button>
+</div>
+
+<main>
+
+  <!-- ============ TAB 1: INFORME ============ -->
+  <section id="tab-informe" class="tab active">
+
+    <div class="card" id="uploadCard">
+      <h2>Cargar resultados genómicos</h2>
+      <div class="sub">Subí el Excel exportado con los resultados de las muestras (formato AltaGEN Beef / Inherit).</div>
+      <div class="dropzone" id="dropzone">
+        <div class="ico">📄</div>
+        <div><b>Hacé clic para elegir un archivo</b> o arrastralo acá</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:6px;">.xlsx</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+      </div>
+    </div>
+
+    <div class="card" id="summaryCard" style="display:none;">
+      <h2 id="clientTitle">Cliente</h2>
+      <div class="sub">Resumen de la carga</div>
+      <div class="summary-grid">
+        <div class="stat"><div class="n" id="statTotal">-</div><div class="l">Animales</div></div>
+        <div class="stat"><div class="n" id="statVars">-</div><div class="l">Variables detectadas</div></div>
+        <div class="stat"><div class="n" id="statRaza">-</div><div class="l">Raza</div></div>
+        <div class="stat"><div class="n" id="statFecha">-</div><div class="l">Fecha muestreo</div></div>
+      </div>
+      <div id="excludedAnimalsNotice" style="display:none; margin-top:12px; background:#fff8ef; border:1px solid #f0d9b5; border-radius:8px; padding:10px 14px; font-size:12.5px; color:#7a5518;"></div>
+
+      <h2 style="margin-top:22px;">Variables detectadas <span class="badge-count" id="varCountBadge">0</span></h2>
+      <div class="sub">Revisá la categorización antes de generar el informe. Las variables en "Otras / Índices" no se muestran en el informe pero sí están disponibles para el Índice de Selección.</div>
+      <table class="cfgtable" id="catalogTable">
+        <thead><tr><th>Variable</th><th style="width:230px;">Categoría en el informe</th><th style="width:190px;">En la telaraña, lo mejor tiende a...</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="btnrow">
+        <button class="btn orange" id="btnGenerate">Generar informe</button>
+        <button class="btn ghost" id="btnExportPdf" disabled>Exportar PDF</button>
+        <button class="btn ghost" id="btnReset">Cargar otro archivo</button>
+      </div>
+      <div id="pdfStatus" style="font-size:12.5px;color:var(--gray);margin-top:8px;"></div>
+    </div>
+
+    <div id="reportPreview"></div>
+
+  </section>
+
+  <!-- ============ TAB 2: INDICE ============ -->
+  <section id="tab-indice" class="tab">
+
+    <div class="card">
+      <h2>Índice de selección genético</h2>
+      <div class="sub">Elegí variables, asignales un peso y un signo (positivo o negativo según convenga a tu criterio de selección), y generá un índice ponderado para rankear los animales del archivo cargado.</div>
+      <div id="idxNoData" class="empty-hint">Primero cargá un Excel en la pestaña "Informe Genómico".</div>
+
+      <div id="idxContent" style="display:none;">
+        <div class="idx-toolbar">
+          <div class="field">
+            <label>Cliente</label>
+            <input list="clientList" id="idxClient" placeholder="Nombre del cliente">
+            <datalist id="clientList"></datalist>
+          </div>
+          <div class="field">
+            <label>Nombre del índice</label>
+            <input id="idxName" placeholder="Ej: Índice Maternal 2026">
+          </div>
+          <div class="field">
+            <label>Normalización</label>
+            <div class="mode-toggle" id="normModeToggle">
+              <button type="button" class="active" data-mode="percentile">Percentil (proveedor)</button>
+              <button type="button" data-mode="raw">Valor crudo — min-max simétrico (0-100)</button>
+              <button type="button" data-mode="raw_pbi">Estilo Power BI (asimétrico + intercepto)</button>
+            </div>
+          </div>
+          <div class="field" id="interceptField" style="display:none;">
+            <label>Intercepto (como tu medida DAX)</label>
+            <input type="number" id="idxIntercept" value="0" step="0.01" style="min-width:100px;">
+          </div>
+        </div>
+        <div class="sub" id="normModeHint" style="margin-top:-8px;"></div>
+        <div class="idx-toolbar">
+          <button class="btn ghost sm" id="btnSelectAll">Marcar todas</button>
+          <button class="btn ghost sm" id="btnSelectNone">Desmarcar todas</button>
+          <button class="btn ghost sm" id="btnDistribute">Distribuir 100% equitativo</button>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div id="weightSumBox" style="padding:8px 14px; border-radius:7px; font-weight:800; font-size:14px; background:#fdeaea; color:#b1301a;">Suma de pesos: 0 / 100</div>
+          </div>
+        </div>
+
+        <div style="background:#fff8ef; border:1px solid #f0d9b5; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; color:#7a5518; line-height:1.5;">
+          ⚠️ <b>Importante sobre la escala de percentil:</b> en el sistema Zoetis Inherit, el percentil <b>1 suele ser el animal superior</b> de la raza y el <b>100 el inferior</b> — al revés de un percentil estadístico tradicional. Por eso el botón de abajo NO asume cuál número es "mejor": vos decidís, rasgo por rasgo, si querés priorizar el número más alto o más bajo. Antes de armar el índice, te recomendamos verificarlo con un animal que conozcas (uno claramente bueno o malo en algún rasgo) y confirmar si su percentil da cerca de 1 o cerca de 100.
+        </div>
+        <table class="cfgtable idx-vartable" id="idxVarTable">
+          <thead><tr><th style="width:36px;"></th><th>Variable</th><th style="width:130px;">Categoría</th><th style="width:90px;">Peso (%)</th><th style="width:190px;">¿Qué buscás en este rasgo?</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <div class="btnrow">
+          <button class="btn orange" id="btnCalcIdx">Calcular índice</button>
+          <button class="btn ghost" id="btnSaveIdx" disabled>Guardar en memoria del cliente</button>
+          <button class="btn ghost" id="btnExportIdxExcel" disabled>Exportar Excel</button>
+          <button class="btn ghost" id="btnExportIdxPdf" disabled>Exportar PDF</button>
+        </div>
+
+        <div id="idxResultsWrap" style="display:none;">
+
+          <h2 style="margin-top:26px;">Resumen por grupo de ranking</h2>
+          <div class="sub">Bandas calculadas según la posición de cada animal en el ranking del índice (no según el valor absoluto). Cada columna de rasgo muestra el promedio real de ese grupo — <b>no</b> está ajustado por el signo. La flecha ↑ junto al nombre del rasgo indica que buscás valor alto (entonces el grupo Top 10% debería tener el promedio más alto ahí); la flecha ↓ indica que buscás valor bajo (entonces el grupo Top 10% va a mostrar el promedio más bajo — eso es lo esperado y correcto).</div>
+          <table class="results-table" id="idxGroupTable">
+            <thead><tr id="idxGroupTableHead"></tr></thead>
+            <tbody></tbody>
+          </table>
+
+          <h2 style="margin-top:26px;">Comparación genética entre grupos</h2>
+          <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <canvas id="idxGroupChart" height="90"></canvas>
+          </div>
+
+          <h2 style="margin-top:26px;">Telarañas por grupo de ranking</h2>
+          <div class="sub">Las mismas 3 telarañas del informe (Crecimiento y tamaño adulto, Rasgos maternales, Rasgos de Carcasa), pero superponiendo el promedio de cada grupo de ranking en vez del promedio general. Elegí qué grupos mostrar. Para agregar una variable de "Otras variables / índices" a alguna de estas 3 telarañas, reasignale la categoría en la tabla de "Variables detectadas" de la pestaña Informe.</div>
+          <div class="idx-toolbar" id="rankRadarBandToggles"></div>
+          <div id="rankRadarGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><canvas id="rankRadar-0"></canvas></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><canvas id="rankRadar-1"></canvas></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><canvas id="rankRadar-2"></canvas></div>
+          </div>
+
+          <h2 style="margin-top:26px;">Explorar variables por grupo de ranking</h2>
+          <div class="sub">Elegí cualquier par de rasgos (no hace falta que estén en el índice) y cada animal se colorea según su grupo de ranking (Top 10%, Top 25%, Media, Peor 25%, Peor 10%).</div>
+          <div class="idx-toolbar">
+            <div class="field">
+              <label>Variable eje X</label>
+              <select id="idxScatterX"></select>
+            </div>
+            <div class="field">
+              <label>Variable eje Y</label>
+              <select id="idxScatterY"></select>
+            </div>
+            <button class="btn ghost sm" id="btnPlotScatter">Graficar</button>
+          </div>
+          <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
+            <canvas id="idxScatterChart" height="90"></canvas>
+          </div>
+
+          <h2 style="margin-top:26px;">Detalle por animal — <span id="idxWeightSum"></span></h2>
+          <table class="results-table" id="idxResultsTable">
+            <thead><tr id="idxResultsTableHead"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Historial por cliente</h2>
+      <div class="sub">Índices guardados en este navegador. Se guardan localmente (localStorage) y también se pueden exportar/importar como respaldo.</div>
+      <div class="idx-toolbar">
+        <div class="field">
+          <label>Ver historial de</label>
+          <input list="clientList2" id="histClient" placeholder="Nombre del cliente">
+          <datalist id="clientList2"></datalist>
+        </div>
+        <button class="btn ghost sm" id="btnLoadHistory">Ver historial</button>
+      </div>
+      <div class="history-list" id="historyList"><div class="empty-hint">Elegí un cliente para ver su historial.</div></div>
+
+      <div class="btnrow" style="margin-top:18px; border-top:1px solid var(--border); padding-top:16px;">
+        <button class="btn ghost sm" id="btnExportBackup">Exportar respaldo (JSON)</button>
+        <button class="btn ghost sm" id="btnImportBackup">Importar respaldo (JSON)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+</div><!-- /appRoot -->
+
+<script>
+/* ============================================================
+   ESTADO GLOBAL
+============================================================ */
+const STORAGE_KEY = 'altagen_indices_v1';
+
+/* ============================================================
+   LICENCIA / ACTIVACIÓN
+   Clave = AÑO-HASH8, donde HASH8 = primeros 8 caracteres de
+   SHA256(SECRET + "|" + nombreClienteNormalizado + "|" + año).
+   La clave caduca automáticamente al cambiar el año.
+   Mismo esquema usado en el resto de las herramientas Alta CIALE:
+   SHA-256 puro en JS (no depende de crypto.subtle, que no
+   funciona al abrir el archivo con file://).
+============================================================ */
+function sha256(ascii) {
+  function rightRotate(value, amount){ return (value>>>amount) | (value<<(32-amount)); }
+  var mathPow = Math.pow, maxWord = mathPow(2,32), lengthProperty='length', i, j, result='';
+  var words = [];
+  var asciiBitLength = ascii[lengthProperty]*8;
+  var hash = sha256.h = sha256.h || [];
+  var k = sha256.k = sha256.k || [];
+  var primeCounter = k[lengthProperty];
+  var isComposite = {};
+  for (var candidate=2; primeCounter<64; candidate++){
+    if (!isComposite[candidate]){
+      for (i=0; i<313; i+=candidate) isComposite[i]=candidate;
+      hash[primeCounter] = (mathPow(candidate,.5)*maxWord)|0;
+      k[primeCounter++] = (mathPow(candidate,1/3)*maxWord)|0;
+    }
+  }
+  ascii += '\x80';
+  while (ascii[lengthProperty]%64 - 56) ascii += '\x00';
+  for (i=0; i<ascii[lengthProperty]; i++){
+    j = ascii.charCodeAt(i);
+    if (j>>8) return;
+    words[i>>2] |= j << ((3-i)%4)*8;
+  }
+  words[words[lengthProperty]] = ((asciiBitLength/maxWord)|0);
+  words[words[lengthProperty]] = (asciiBitLength);
+  for (j=0; j<words[lengthProperty];){
+    var w = words.slice(j, j+=16);
+    var oldHash = hash;
+    hash = hash.slice(0,8);
+    for (i=0; i<64; i++){
+      var w15=w[i-15], w2=w[i-2];
+      var a=hash[0], e=hash[4];
+      var temp1 = hash[7]
+        + (rightRotate(e,6) ^ rightRotate(e,11) ^ rightRotate(e,25))
+        + ((e&hash[5])^((~e)&hash[6]))
+        + k[i]
+        + (w[i] = (i<16) ? w[i] : (
+            w[i-16] + (rightRotate(w15,7) ^ rightRotate(w15,18) ^ (w15>>>3))
+            + w[i-7] + (rightRotate(w2,17) ^ rightRotate(w2,19) ^ (w2>>>10))
+          )|0
+        );
+      var temp2 = (rightRotate(a,2) ^ rightRotate(a,13) ^ rightRotate(a,22))
+        + ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash = [(temp1+temp2)|0].concat(hash);
+      hash[4] = (hash[4]+temp1)|0;
+    }
+    for (i=0; i<8; i++) hash[i] = (hash[i]+oldHash[i])|0;
+  }
+  for (i=0; i<8; i++){
+    for (j=3; j+1; j--){
+      var b = (hash[i]>>(j*8))&255;
+      result += ((b<16)?0:'') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+// secreto levemente ofuscado (no es seguridad real, solo evita que se lea a simple vista en el HTML)
+const LIC_SECRET = ['Alta','Gen','Beef','-','K7q','2','fZ','x9'].join('');
+function normalizeClientName(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function expectedHash8(clientName, year){
+  return sha256(LIC_SECRET+'|'+normalizeClientName(clientName)+'|'+year).slice(0,8).toUpperCase();
+}
+const LIC_STORE_KEY = 'altagen_license_v1';
+
+function tryUnlock(clientName, key, silent){
+  const err = document.getElementById('licError');
+  if(!silent) err.textContent = '';
+  const m = /^(\d{4})-([A-Fa-f0-9]{8})$/.exec((key||'').trim());
+  if(!m){
+    if(!silent) err.textContent = 'Formato de clave inválido. Debe ser AAAA-XXXXXXXX.';
+    return false;
+  }
+  const year = Number(m[1]);
+  const hash = m[2].toUpperCase();
+  const currentYear = new Date().getFullYear();
+  if(year !== currentYear){
+    if(!silent) err.textContent = year < currentYear ? 'Esta clave venció. Pedí una clave nueva.' : 'Esta clave todavía no es válida.';
+    return false;
+  }
+  if(!clientName || !clientName.trim()){
+    if(!silent) err.textContent = 'Ingresá el nombre del cliente.';
+    return false;
+  }
+  if(expectedHash8(clientName, year) !== hash){
+    if(!silent) err.textContent = 'Clave incorrecta para ese nombre de cliente.';
+    return false;
+  }
+  localStorage.setItem(LIC_STORE_KEY, JSON.stringify({clientName, key: `${year}-${hash}`, year}));
+  document.getElementById('licenseGate').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+  return true;
+}
+
+(function checkStoredLicense(){
+  try{
+    const stored = JSON.parse(localStorage.getItem(LIC_STORE_KEY));
+    if(stored && stored.clientName && stored.key){
+      tryUnlock(stored.clientName, stored.key, true);
+    }
+  }catch(e){}
+  document.getElementById('licClientName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('licKeyInput').focus(); });
+  document.getElementById('licKeyInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('licSubmit').click(); });
+  document.getElementById('licSubmit').addEventListener('click', ()=>{
+    tryUnlock(document.getElementById('licClientName').value, document.getElementById('licKeyInput').value, false);
+  });
+})();
+let customerName = '';
+let animals = [];      // {id, sexo, fechaNac, nombre, eid, raza, vals:{key:{raw,pct}}}
+let excludedAnimalIds = []; // animales sin ningún dato genómico, excluidos del dataset
+let catalog = [];      // {key, label, category, rawIdx, pctIdx}
+const CATS = ['Crecimiento y tamaño adulto','Rasgos maternales','Rasgos de Carcasa','Otras variables / índices'];
+const CAT_TAGCLASS = {0:'g1',1:'g2',2:'g3',3:'g4'};
+let lastIdxResults = null; // {config, results, normMode}
+let idxNormMode = 'percentile'; // 'percentile' | 'raw'
+
+/* ============================================================
+   NAV TABS
+============================================================ */
+document.querySelectorAll('.tabbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.tab).classList.add('active');
+    if(b.dataset.tab==='tab-indice') refreshIndiceTab();
+  });
+});
+
+/* ============================================================
+   CARGA DE ARCHIVO
+============================================================ */
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+dropzone.addEventListener('click', ()=>fileInput.click());
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  animals=[]; catalog=[]; customerName='';
+  document.getElementById('summaryCard').style.display='none';
+  document.getElementById('reportPreview').innerHTML='';
+  document.getElementById('btnExportPdf').disabled = true;
+  fileInput.value='';
+});
+
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:false});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:null});
+      parseWorkbookRows(rows);
+    }catch(err){
+      alert('No se pudo leer el archivo: '+err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function norm(s){ return (s===null||s===undefined) ? '' : String(s).trim(); }
+
+function parseWorkbookRows(rows){
+  // 1. cliente
+  customerName = '';
+  let headerRowIdx = -1;
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i];
+    if(!r) continue;
+    if(norm(r[0]).toLowerCase()==='customer name'){ customerName = norm(r[1]); }
+    if(norm(r[0]).toLowerCase()==='etiqueta de oreja'){ headerRowIdx = i; break; }
+  }
+  if(headerRowIdx===-1){
+    alert('No se encontró la fila de encabezados ("Etiqueta de Oreja"). Verificá el formato del archivo.');
+    return;
+  }
+  const header = rows[headerRowIdx].map(norm);
+
+  // 2. detectar variables: columna i es "trait" si columna i+1 contiene RANGO o RANK
+  const EXCLUDE = new Set(['etiqueta de oreja','sexo','fecha de nacimiento','nombre animal','products','eid','raza']);
+  catalog = [];
+  const seen = new Set();
+  for(let i=0;i<header.length-1;i++){
+    const h = header[i];
+    const hNext = header[i+1];
+    if(!h) continue;
+    if(EXCLUDE.has(h.toLowerCase())) continue;
+    if(/rango|rank/i.test(h)) continue; // no encadenar
+    if(/rango|rank/i.test(hNext)){
+      const label = prettyLabel(h);
+      if(seen.has(label)) continue;
+      seen.add(label);
+      catalog.push({
+        key: label,
+        rawLabel: h,
+        rawIdx: i,
+        pctIdx: i+1,
+        category: guessCategory(h),
+        invert: false // false = "mejor" tiende a 1 (periferia) | true = "mejor" tiende a 100 (periferia)
+      });
+    }
+  }
+
+  // 3. animales
+  animals = [];
+  for(let r=headerRowIdx+1; r<rows.length; r++){
+    const row = rows[r];
+    if(!row) continue;
+    const id = row[0];
+    if(id===null || id===undefined || norm(id)==='') continue;
+    const a = {
+      id: norm(id),
+      sexo: norm(row[1]),
+      fechaNac: norm(row[2]),
+      nombre: norm(row[3]),
+      eid: norm(row[5]),
+      raza: norm(row[6]),
+      vals: {}
+    };
+    catalog.forEach(v=>{
+      const raw = row[v.rawIdx];
+      const pct = row[v.pctIdx];
+      a.vals[v.key] = { raw: (raw===undefined?null:raw), pct: (pct===undefined||pct===null)?null:Number(pct) };
+    });
+    animals.push(a);
+  }
+
+  // 3b. excluir animales sin ningún dato genómico (todas las variables en blanco)
+  excludedAnimalIds = [];
+  animals = animals.filter(a=>{
+    const hasAnyData = catalog.some(v=> a.vals[v.key].pct !== null || a.vals[v.key].raw !== null);
+    if(!hasAnyData){ excludedAnimalIds.push(a.id); return false; }
+    return true;
+  });
+
+  if(animals.length===0){
+    alert('No se detectaron animales con datos genómicos en el archivo.');
+    return;
+  }
+
+  renderSummary();
+}
+
+function prettyLabel(h){
+  const MAP = {
+    'peso al nacer':'Peso al Nacer',
+    'peso al destete':'Peso al destete',
+    'peso al año (yw)':'Peso al año',
+    'consumo de materia seca (dmi)':'Consumo MS',
+    'eficiencia de conversión (f:g)':'Eficiencia de Conversión',
+    'estatura al año (yh)':'Estatura al año',
+    'peso adulto (mw)':'Peso maduro',
+    'calving ease direct':'FPD',
+    'facilidad de parto materna (cem)':'FPM',
+    'gestation length':'Largo de Gestación',
+    'leche':'Leche',
+    'compuesto de pezones y ubre (tuc)':'Compuesto de Ubre',
+    'docilidad':'Docilidad',
+    'fertilidad de la vaca (frt)':'Fertilidad',
+    'circunferencia escrotal':'Circunferencia Escrotal',
+    'compuesto de patas (fsc)':'Compuesto de patas',
+    'peso de la canal':'Peso de Carcasa',
+    'espesor de la grasa':'Grasa',
+    'área ojo de bife (rea)':'AOB',
+    'grado de rendimiento':'Grado de rendimiento',
+    'puntuación de marmoleo (marb)':'Marbling'
+  };
+  const key = h.toLowerCase().trim();
+  return MAP[key] || h;
+}
+
+function guessCategory(h){
+  const l = h.toLowerCase();
+  if(/nacer|destete|a[nñ]o|adulto|madur|consumo|conversi[oó]n|estatura/.test(l)) return 0;
+  if(/leche|gestaci[oó]n|gestation|ubre|pezon|docilidad|fertilidad|escrotal|patas|parto|calving/.test(l)) return 1;
+  if(/canal|carcasa|grasa|ojo de bife|\brea\b|rendimiento|marmol|marbling/.test(l)) return 2;
+  return 3;
+}
+
+/* ============================================================
+   RESUMEN + TABLA DE CATÁLOGO
+============================================================ */
+function renderSummary(){
+  document.getElementById('uploadCard').style.display='none';
+  document.getElementById('summaryCard').style.display='block';
+  document.getElementById('clientTitle').textContent = customerName || 'Cliente sin nombre';
+  document.getElementById('statTotal').textContent = animals.length;
+  document.getElementById('statVars').textContent = catalog.length;
+  document.getElementById('statRaza').textContent = animals[0].raza || '-';
+  document.getElementById('statFecha').textContent = animals[0].fechaNac || '-';
+  document.getElementById('varCountBadge').textContent = catalog.length;
+
+  const notice = document.getElementById('excludedAnimalsNotice');
+  if(excludedAnimalIds.length){
+    notice.style.display = 'block';
+    notice.innerHTML = `⚠️ Se excluyeron <b>${excludedAnimalIds.length}</b> animal(es) sin ningún dato genómico (no se van a incluir en el informe ni en el índice): ${excludedAnimalIds.join(', ')}`;
+  } else {
+    notice.style.display = 'none';
+  }
+
+  const tbody = document.querySelector('#catalogTable tbody');
+  tbody.innerHTML = '';
+  catalog.forEach((v,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${v.key}</td>
+      <td>
+        <select data-idx="${idx}" class="catSelect">
+          ${CATS.map((c,ci)=>`<option value="${ci}" ${ci===v.category?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="sign-toggle" data-idx="${idx}">
+          <button type="button" class="pos ${!v.invert?'active':''}" data-invert="0">1 (periferia)</button>
+          <button type="button" class="neg ${v.invert?'active':''}" data-invert="1">100 (periferia)</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.catSelect').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      catalog[Number(e.target.dataset.idx)].category = Number(e.target.value);
+    });
+  });
+  tbody.querySelectorAll('.sign-toggle').forEach(tg=>{
+    tg.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        tg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        catalog[Number(tg.dataset.idx)].invert = btn.dataset.invert === '1';
+      });
+    });
+  });
+
+  document.getElementById('reportPreview').innerHTML = '';
+  document.getElementById('btnExportPdf').disabled = true;
+}
+
+/* ============================================================
+   GENERACIÓN DEL INFORME (páginas)
+============================================================ */
+document.getElementById('btnGenerate').addEventListener('click', generateReport);
+document.getElementById('btnExportPdf').addEventListener('click', exportReportPdf);
+
+let chartRegistry = [];
+
+function catVars(catIdx){ return catalog.filter(v=>v.category===catIdx); }
+function avgPct(v){
+  const vals = animals.map(a=>a.vals[v.key].pct).filter(x=>x!==null && !isNaN(x));
+  if(!vals.length) return 0;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function fmt(n){ return (Math.round(n*100)/100).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+// Valor usado para posicionar el punto en la telaraña: respeta el toggle "invert" de cada variable.
+// Con el eje radial invertido (reverse:true), un valor bajo queda cerca de la periferia.
+function radarValue(v){
+  const a = avgPct(v);
+  return v.invert ? (100 - a) : a;
+}
+
+function generateReport(){
+  chartRegistry.forEach(c=>c.destroy());
+  chartRegistry = [];
+  const wrap = document.getElementById('reportPreview');
+  wrap.innerHTML = '';
+
+  wrap.appendChild(buildResumenGeneralPage());
+  buildScatterPages().forEach(p=>wrap.appendChild(p));
+  buildIndividualPages().forEach(p=>wrap.appendChild(p));
+
+  // instanciar charts (deben estar en el DOM)
+  requestAnimationFrame(()=>{
+    instantiateRadarCharts();
+    instantiateScatterCharts();
+    document.getElementById('btnExportPdf').disabled = false;
+  });
+
+  wrap.scrollIntoView({behavior:'smooth'});
+}
+
+function pageEl(cls){
+  const d = document.createElement('div');
+  d.className = 'report-page ' + (cls||'');
+  return d;
+}
+
+function altagenMarkSvg(size){
+  size = size||56;
+  return `<svg viewBox="0 0 40 40" width="${size}" height="${size}">
+    <polygon points="20,2 38,20 20,38 2,20" fill="#d99a4e"/>
+    <path d="M20 38 L2 20 L38 20 Z" fill="#c9853f" opacity="0.9"/>
+    <path d="M10 20 Q20 10 30 20 Q20 30 10 20" stroke="#fff" stroke-width="1.4" fill="none" opacity=".85"/>
+  </svg>`;
+}
+
+function waveSvg(color1,color2){
+  return `<svg class="wave-bottom" viewBox="0 0 800 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,90 C150,140 300,40 450,90 C600,140 700,60 800,100 L800,180 L0,180 Z" fill="${color1}" opacity="0.5"/>
+    <path d="M0,120 C180,70 350,150 500,110 C650,80 720,140 800,120 L800,180 L0,180 Z" fill="${color2}" opacity="0.7"/>
+  </svg>`;
+}
+
+function buildCoverPage(){
+  const p = pageEl('pg-navy');
+  p.style.padding='0';
+  p.innerHTML = `
+    <div class="pg-logo-corner" style="color:#fff;">
+      <div class="txt"><b>Alta</b>CIALE</div>
+    </div>
+    <div style="padding:110px 60px 0; text-align:center;">
+      <h1 style="font-size:30px; line-height:1.3; margin:0;">Resumen de resultados<br>Genómicos</h1>
+      <div style="margin-top:14px; font-size:15px; color:#c9d2ee;">${customerName || ''}</div>
+    </div>
+    <div style="display:flex; justify-content:center; margin-top:90px;">
+      <div class="altagen-mark">
+        ${altagenMarkSvg(76)}
+        <div class="lbl"><span class="a1">Alta</span><span class="a1">GEN</span><span class="a1">BEEF</span></div>
+      </div>
+    </div>
+    ${waveSvg('#2f8fd6','#182563')}
+  `;
+  return p;
+}
+
+function buildDescripcionEquipoPage(){
+  const p = pageEl(); p.classList.add('pg-pad');
+  p.innerHTML = `
+    <div class="pg-logo-corner">${altagenMiniLbl()}</div>
+    <div class="section-bar">DESCRIPCIÓN DEL PROGRAMA</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; font-size:12.5px; line-height:1.6; color:#333;">
+      <p>El <b>análisis genómico en bovinos</b> permite evaluar el potencial genético real de cada animal a partir de su ADN, independientemente de su edad o desempeño productivo previo. A través de esta herramienta es posible predecir con mayor precisión características clave como facilidad de parto, crecimiento, eficiencia productiva, calidad de carne entre otros.</p>
+      <p>El programa <b>AltaGen Beef</b> permite analizar la información de las muestras genómicas y crear un <b>índice</b> de selección <b>genético personalizado</b>, focalizando los parámetros que son importantes para tu sistema productivo, permitiendo acelerar el progreso genético de tu rodeo.</p>
+    </div>
+
+    <div class="section-bar" style="margin-top:34px;">EQUIPO ALTAGEN BEEF</div>
+    <div class="team-grid">
+      <div class="team-card"><div class="av">MC</div><div><div class="nm">Meirotti María Clara</div><div class="rl">Asesora Técnica AltaGen Beef Argentina</div><div class="ds">Médica Veterinaria recibida en la facultad de Agronomía y Veterinaria de la Universidad Nacional de Río Cuarto (UNRC).</div></div></div>
+      <div class="team-card"><div class="av">MM</div><div><div class="nm">Machain Matías Guillermo</div><div class="rl">Responsable Técnico de programas de carne</div><div class="ds">Médico Veterinario recibido de la Universidad Nacional del Centro de la Provincia de Buenos Aires (UNCPBA).</div></div></div>
+      <div class="team-card"><div class="av">NC</div><div><div class="nm">Navarro Candela</div><div class="rl">Asesora AltaGen Beef Argentina</div><div class="ds">Recepción y envío de muestras genómicas.</div></div></div>
+      <div class="team-card"><div class="av">VP</div><div><div class="nm">Veiga Pablo Rubén</div><div class="rl">Soporte técnico de programas de carne</div><div class="ds">Médico Veterinario recibido de la Universidad Nacional del Rosario (UNR). Especialista en Reproducción Bovina (IRAC).</div></div></div>
+    </div>
+    <div class="footer-note">Contacto: Matías Machain · 2494314315</div>
+  `;
+  return p;
+}
+
+function altagenMiniLbl(){
+  return `<div class="altagen-mark">${altagenMarkSvg(30)}<div class="lbl" style="font-size:9px;"><span class="a1" style="font-size:9px;">Alta</span><span class="a1" style="font-size:9px;">GEN</span><span class="a1" style="font-size:9px;">BEEF</span></div></div>`;
+}
+
+function buildComoFuncionaPage(){
+  const p = pageEl(); p.classList.add('pg-pad');
+  const steps = [
+    ['Análisis información genómica','El programa comienza con el análisis de una primera muestra genómica, obteniendo un diagnóstico objetivo del estado genético inicial de la población.'],
+    ['Elaboración de Índice Genético Personalizado','En caso de incorporarse al programa, se diseña un índice genético personalizado alineado a los objetivos productivos y la estrategia del establecimiento.'],
+    ['Implementación del Índice Genético','Se avanza en su implementación práctica, utilizándolo como herramienta central para la selección genética de los animales.'],
+    ['Selección genética en base al Índice Genético','Cada decisión de selección se apoya en información objetiva y comparable entre animales.'],
+    ['Monitoreo del Programa Genético Personalizado','Medición sistemática del avance genético de la población a lo largo de los años, ajustando criterios cuando es necesario.']
+  ];
+  p.innerHTML = `
+    <div class="pg-logo-corner">${altagenMiniLbl()}</div>
+    <div class="section-bar">¿CÓMO FUNCIONA?</div>
+    <p style="font-size:12.5px; line-height:1.6; color:#333;">El programa contempla el análisis inicial de una muestra genómica, el diseño de un índice personalizado, su implementación práctica en la selección de animales y la medición sistemática del progreso genético a lo largo del tiempo.</p>
+    <div class="steps-list">
+      ${steps.map((s,i)=>`<div class="step-item"><div class="num">${i+1}</div><div class="tx"><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('')}
+    </div>
+  `;
+  return p;
+}
+
+function buildSumatePage(){
+  const p = pageEl('pg-navy');
+  p.innerHTML = `
+    <div style="position:absolute; top:0; left:0; background:${'#1e6b3c'}; color:#fff; padding:16px 26px; font-weight:800; font-size:15px; line-height:1.25;">
+      MEJORES VACAS<br>PARA UN<br><span style="font-size:17px;">MUNDO MEJOR</span>
+    </div>
+    <div class="pg-logo-corner" style="top:26px;">${altagenMiniLbl()}</div>
+    <div style="display:flex; align-items:center; justify-content:center; height:100%; min-height:1123px;">
+      <div style="text-align:center;">
+        <div style="font-size:46px; font-weight:900; letter-spacing:2px;">SUMATE</div>
+        <div style="color:#c9d2ee; font-size:13px; margin-top:10px;">altagenbeef@altaciale.com.ar</div>
+      </div>
+    </div>
+  `;
+  return p;
+}
+
+function buildDividerPage(title){
+  const p = pageEl('pg-navy divider-page');
+  p.style.display='flex'; p.style.alignItems='center'; p.style.justifyContent='center';
+  p.innerHTML = `<div class="section-bar" style="width:100%;">${title}</div>`;
+  return p;
+}
+
+function buildResumenGeneralPage(){
+  const p = pageEl(); p.classList.add('pg-pad');
+  let inner = `<div style="margin-bottom:14px;">
+      <div style="font-size:19px; font-weight:800; color:var(--navy);">Resumen de resultados Genómicos</div>
+      <div style="font-size:13px; color:var(--gray);">${customerName ? customerName+' · ' : ''}${new Date().toLocaleDateString('es-AR')}</div>
+    </div>
+    <div class="section-bar">Total animales muestreados&nbsp;&nbsp;<span style="font-weight:900;">${animals.length}</span></div>`;
+  for(let c=0;c<3;c++){
+    const vars = catVars(c);
+    if(!vars.length) continue;
+    inner += `<div class="chart-row">
+      <div><canvas id="radar-${c}"></canvas></div>
+      <div>
+        <div style="font-weight:700; font-size:12.5px; color:var(--navy); margin-bottom:6px;">${CATS[c]}</div>
+        <table class="mini-table"><thead><tr><th>Variable</th><th style="text-align:right;">Percentil</th></tr></thead><tbody>
+          ${vars.map(v=>`<tr><td>${v.key}${v.invert?' <span style="color:var(--orange2);font-size:10px;" title="Orientación invertida en el gráfico">(inv.)</span>':''}</td><td class="num">${fmt(avgPct(v))}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+  }
+  p.innerHTML = inner;
+  return p;
+}
+
+function instantiateRadarCharts(){
+  for(let c=0;c<3;c++){
+    const canvas = document.getElementById('radar-'+c);
+    if(!canvas) continue;
+    const vars = catVars(c);
+    const chart = new Chart(canvas, {
+      type:'radar',
+      data:{ labels: vars.map(v=>v.key), datasets:[{
+        label:CATS[c], data: vars.map(v=>radarValue(v)),
+        borderColor:'#2f8fd6', backgroundColor:'rgba(47,143,214,0.18)', pointBackgroundColor:'#2f8fd6'
+      }]},
+      options:{
+        animation:false, responsive:true,
+        scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:9}, backdropColor:'transparent'}, pointLabels:{font:{size:9.5}} } },
+        plugins:{
+          legend:{display:false},
+          tooltip:{ callbacks:{ label:(ctx)=>{
+            const v = vars[ctx.dataIndex];
+            return v.key+': '+fmt(avgPct(v))+' (percentil real)';
+          }}}
+        }
+      }
+    });
+    chartRegistry.push(chart);
+  }
+}
+
+function findVar(label){ return catalog.find(v=>v.key.toLowerCase()===label.toLowerCase()); }
+
+function buildScatterPages(){
+  const pairs = [
+    ['FPD','Peso al Nacer'],
+    ['Peso al Nacer','Peso al destete'],
+    ['Peso al destete','Peso al año'],
+    ['Estatura al año','Peso maduro']
+  ].filter(pr=>findVar(pr[0]) && findVar(pr[1]));
+
+  if(!pairs.length) return [];
+  const p = pageEl(); p.classList.add('pg-pad');
+  let inner = `<div class="section-bar">Total animales muestreados&nbsp;&nbsp;<span style="font-weight:900;">${animals.length}</span></div>`;
+  pairs.forEach((pr,i)=>{
+    inner += `<div class="scatter-block">
+      <div class="ttl">Percentil ${pr[0]} y ${pr[1]}</div>
+      <canvas id="scatter-${i}"></canvas>
+    </div>`;
+  });
+  p.innerHTML = inner;
+  p.dataset.pairs = JSON.stringify(pairs);
+  return [p];
+}
+
+function instantiateScatterCharts(){
+  const page = document.querySelector('#reportPreview .report-page[data-pairs]');
+  if(!page) return;
+  const pairs = JSON.parse(page.dataset.pairs);
+  pairs.forEach((pr,i)=>{
+    const canvas = document.getElementById('scatter-'+i);
+    if(!canvas) return;
+    const vx = findVar(pr[0]), vy = findVar(pr[1]);
+    const pts = animals.map(a=>({x:a.vals[vx.key].pct, y:a.vals[vy.key].pct})).filter(pt=>pt.x!==null&&pt.y!==null);
+    const chart = new Chart(canvas, {
+      type:'scatter',
+      data:{ datasets:[{ data:pts, backgroundColor:'#2f8fd6', pointRadius:3 }] },
+      options:{
+        animation:false, responsive:true,
+        scales:{ x:{ min:0,max:100, title:{display:true,text:pr[0],font:{size:9}}, ticks:{font:{size:8}} },
+                 y:{ min:0,max:100, title:{display:true,text:pr[1],font:{size:9}}, ticks:{font:{size:8}} } },
+        plugins:{ legend:{display:false} }
+      }
+    });
+    chartRegistry.push(chart);
+  });
+}
+
+function buildIndividualPages(){
+  const pages = [];
+  const mainCats = [0,1,2];
+  for(let i=0;i<animals.length;i+=3){
+    const group = animals.slice(i,i+3);
+    const p = pageEl(); p.classList.add('pg-pad');
+    let inner = i===0 ? `<div class="section-bar">Resumen Genómico Individual</div>` : '';
+    group.forEach(a=>{
+      inner += `<div class="ficha-block">
+        <div class="ficha-head">
+          <div class="idbox">Identificación Animal<b>${a.id}</b></div>
+          <div class="idbox">Nombre Animal<b>${a.nombre||'—'}</b></div>
+        </div>
+        <div class="ficha-cols">
+          ${mainCats.map(c=>{
+            const vars = catVars(c);
+            return `<div><h4>${CATS[c]}</h4>
+              <table class="mini-table"><tbody>
+              ${vars.map(v=>`<tr><td>${v.key}</td><td class="num">${a.vals[v.key].pct===null?'-':fmt(a.vals[v.key].pct)}</td></tr>`).join('')}
+              </tbody></table>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+    p.innerHTML = inner;
+    pages.push(p);
+  }
+  return pages;
+}
+
+function buildBackCoverPage(){
+  const p = pageEl('pg-navy');
+  p.style.display='flex'; p.style.alignItems='center'; p.style.justifyContent='center';
+  p.innerHTML = `<div class="txt" style="font-family:Georgia,serif; font-size:34px;"><b style="display:block;font-size:38px;">Alta</b>CIALE</div>`;
+  return p;
+}
+
+/* ============================================================
+   EXPORT PDF DEL INFORME
+============================================================ */
+async function exportReportPdf(){
+  const status = document.getElementById('pdfStatus');
+  const pages = document.querySelectorAll('#reportPreview .report-page');
+  if(!pages.length) return;
+  document.getElementById('btnExportPdf').disabled = true;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+  for(let i=0;i<pages.length;i++){
+    status.textContent = `Generando PDF... página ${i+1}/${pages.length}`;
+    await new Promise(r=>setTimeout(r,30));
+    const canvas = await html2canvas(pages[i], {scale:2, useCORS:true, backgroundColor:'#ffffff'});
+    const img = canvas.toDataURL('image/jpeg', 0.92);
+    if(i>0) doc.addPage();
+    doc.addImage(img, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+  }
+  const fname = `Informe_Genomico_${(customerName||'cliente').replace(/[^a-z0-9]+/gi,'_')}.pdf`;
+  doc.save(fname);
+  status.textContent = 'PDF generado: ' + fname;
+  document.getElementById('btnExportPdf').disabled = false;
+}
+
+/* ============================================================
+   MÓDULO: ÍNDICE DE SELECCIÓN
+============================================================ */
+function refreshIndiceTab(){
+  const has = animals.length>0;
+  document.getElementById('idxNoData').style.display = has ? 'none':'block';
+  document.getElementById('idxContent').style.display = has ? 'block':'none';
+  if(has) renderIdxVarTable();
+  populateClientLists();
+}
+
+const NORM_MODE_HINTS = {
+  percentile: 'Usa el percentil que ya viene calculado por el proveedor (0-100, comparado contra toda la raza).',
+  raw: 'Normaliza el valor crudo con min-max dentro de este lote, en escala 0-100, simétrica (premia y castiga por igual).',
+  raw_pbi: 'Replica tu fórmula de Power BI: min-max 0-1 sobre el valor crudo, rasgos "Busco BAJO" restan en vez de invertirse, y se suma el intercepto que definas.'
+};
+document.querySelectorAll('#normModeToggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#normModeToggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    idxNormMode = btn.dataset.mode;
+    document.getElementById('interceptField').style.display = idxNormMode==='raw_pbi' ? 'flex' : 'none';
+    document.getElementById('normModeHint').textContent = NORM_MODE_HINTS[idxNormMode] || '';
+  });
+});
+document.getElementById('normModeHint').textContent = NORM_MODE_HINTS[idxNormMode];
+
+function computeMinMax(){
+  const mm = {};
+  catalog.forEach(v=>{
+    const vals = animals.map(a=>Number(a.vals[v.key].raw)).filter(x=>!isNaN(x));
+    mm[v.key] = vals.length ? { min: Math.min(...vals), max: Math.max(...vals) } : { min:0, max:0 };
+  });
+  return mm;
+}
+
+function normalizedTraitValue(a, key, normMode, minMax){
+  if(normMode==='raw' || normMode==='raw_pbi'){
+    const raw = Number(a.vals[key].raw);
+    const {min,max} = minMax[key];
+    if(isNaN(raw) || max===min) return null;
+    return ((raw-min)/(max-min))*100;
+  }
+  return a.vals[key].pct;
+}
+
+function renderIdxVarTable(){
+  const tbody = document.querySelector('#idxVarTable tbody');
+  tbody.innerHTML = '';
+  catalog.forEach((v,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="idxInclude" data-idx="${idx}"></td>
+      <td>${v.key}</td>
+      <td><span class="tag ${CAT_TAGCLASS[v.category]}">${CATS[v.category].split(' ')[0]}</span></td>
+      <td><input type="number" class="idxWeight" data-idx="${idx}" min="0" max="100" value="0"></td>
+      <td>
+        <div class="sign-toggle" data-idx="${idx}">
+          <button type="button" class="pos active" data-sign="1" title="Prioriza animales con el NÚMERO de percentil/valor más alto en este rasgo">Busco ALTO ↑</button>
+          <button type="button" class="neg" data-sign="-1" title="Prioriza animales con el NÚMERO de percentil/valor más bajo en este rasgo">Busco BAJO ↓</button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.sign-toggle').forEach(tg=>{
+    tg.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        tg.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+  tbody.querySelectorAll('.idxInclude, .idxWeight').forEach(el=>{
+    el.addEventListener('input', updateWeightSumBox);
+    el.addEventListener('change', updateWeightSumBox);
+  });
+  updateWeightSumBox();
+  populateScatterSelects();
+}
+
+function populateScatterSelects(){
+  const opts = catalog.map((v,i)=>`<option value="${i}">${v.key}</option>`).join('');
+  const selX = document.getElementById('idxScatterX');
+  const selY = document.getElementById('idxScatterY');
+  selX.innerHTML = opts;
+  selY.innerHTML = opts;
+  if(catalog.length>1){ selX.value = 0; selY.value = 1; }
+}
+
+function currentWeightSum(){
+  let sum = 0;
+  document.querySelectorAll('#idxVarTable tbody tr').forEach(tr=>{
+    if(tr.querySelector('.idxInclude').checked){
+      sum += Number(tr.querySelector('.idxWeight').value) || 0;
+    }
+  });
+  return sum;
+}
+
+function updateWeightSumBox(){
+  const sum = currentWeightSum();
+  const box = document.getElementById('weightSumBox');
+  box.textContent = `Suma de pesos: ${sum} / 100`;
+  const ok = sum === 100;
+  box.style.background = ok ? '#e6f6ea' : '#fdeaea';
+  box.style.color = ok ? '#1e7a3c' : '#b1301a';
+  document.getElementById('btnCalcIdx').disabled = !ok;
+}
+
+document.getElementById('btnDistribute').addEventListener('click', ()=>{
+  const rows = Array.from(document.querySelectorAll('#idxVarTable tbody tr')).filter(tr=>tr.querySelector('.idxInclude').checked);
+  if(!rows.length){ alert('Marcá al menos una variable primero.'); return; }
+  const base = Math.floor(100/rows.length);
+  let remainder = 100 - base*rows.length;
+  rows.forEach((tr,i)=>{
+    const w = base + (i<remainder ? 1 : 0);
+    tr.querySelector('.idxWeight').value = w;
+  });
+  updateWeightSumBox();
+});
+
+document.getElementById('btnSelectAll').addEventListener('click', ()=>{
+  document.querySelectorAll('.idxInclude').forEach(cb=>cb.checked=true);
+});
+document.getElementById('btnSelectNone').addEventListener('click', ()=>{
+  document.querySelectorAll('.idxInclude').forEach(cb=>cb.checked=false);
+});
+
+function readIdxConfig(){
+  const config = [];
+  document.querySelectorAll('#idxVarTable tbody tr').forEach((tr,idx)=>{
+    const inc = tr.querySelector('.idxInclude').checked;
+    if(!inc) return;
+    const weight = Number(tr.querySelector('.idxWeight').value) || 0;
+    const signBtn = tr.querySelector('.sign-toggle button.active');
+    const sign = Number(signBtn.dataset.sign);
+    config.push({ key: catalog[idx].key, weight, sign });
+  });
+  return config;
+}
+
+function computeIndex(config, normMode, intercept){
+  intercept = intercept || 0;
+  const minMax = (normMode==='raw' || normMode==='raw_pbi') ? computeMinMax() : null;
+  const results = animals.map(a=>{
+    let sum = 0;             // usado tal cual para el modo estilo Power BI (para matchear el DAX)
+    let weightedSum = 0;      // usado para los modos simétricos (renormalizado por peso disponible)
+    let usedWeight = 0;
+    const traits = {}; // siempre guardamos el valor "display" en escala 0-100, sin ajustar por signo
+    config.forEach(c=>{
+      const dispVal = normalizedTraitValue(a, c.key, normMode, minMax); // 0-100 (o null)
+      traits[c.key] = dispVal;
+      if(dispVal===null || isNaN(dispVal)) return; // rasgo faltante para este animal: no se cuenta ni penaliza
+
+      if(normMode==='raw_pbi'){
+        // replica exacta de la lógica DAX: Valor 0-1, ValorAjustado = -Valor si es "-", si no Valor sin cambios
+        const valor01 = dispVal/100;
+        const ajustado = c.sign===1 ? valor01 : -valor01;
+        sum += ajustado * (c.weight/100);
+      } else {
+        // modos simétricos: rasgo "-" se invierte (100 - valor); se pondera solo entre los rasgos que el animal SÍ tiene
+        const contrib = c.sign===1 ? dispVal : (100-dispVal);
+        weightedSum += contrib * c.weight;
+        usedWeight += c.weight;
+      }
+    });
+    const idx = normMode==='raw_pbi' ? (sum*100 + intercept) : (usedWeight>0 ? weightedSum/usedWeight : 0);
+    return { id:a.id, nombre:a.nombre, sexo:a.sexo, idx, traits };
+  });
+  results.sort((a,b)=>b.idx - a.idx);
+  categorizeResults(results);
+  return { results, totalWeight:100 };
+}
+
+const RANK_BANDS = ['Top 10%','Top 25%','Media','Peor 25%','Peor 10%'];
+function categorizeResults(results){
+  const n = results.length;
+  if(!n) return;
+  const c10 = Math.max(1, Math.round(n*0.10));
+  const c25 = Math.max(c10, Math.round(n*0.25));
+  const b10 = Math.max(1, Math.round(n*0.10));
+  const b25 = Math.max(b10, Math.round(n*0.25));
+  results.forEach((r,i)=>{
+    const rank = i+1;
+    const rankFromBottom = n - i;
+    if(rank <= c10) r.categ = 'Top 10%';
+    else if(rank <= c25) r.categ = 'Top 25%';
+    else if(rankFromBottom <= b10) r.categ = 'Peor 10%';
+    else if(rankFromBottom <= b25) r.categ = 'Peor 25%';
+    else r.categ = 'Media';
+  });
+}
+
+function buildGroupSummary(results, config){
+  const groups = {};
+  RANK_BANDS.forEach(b=> groups[b] = []);
+  results.forEach(r=> groups[r.categ].push(r));
+  const rows = RANK_BANDS.map(band=>{
+    const items = groups[band];
+    const row = { categ: band, cant: items.length,
+      idx: items.length ? items.reduce((s,r)=>s+r.idx,0)/items.length : 0,
+      traits: {} };
+    config.forEach(c=>{
+      const vals = items.map(r=>r.traits[c.key]).filter(v=>v!==null && !isNaN(v));
+      row.traits[c.key] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+    });
+    return row;
+  });
+  // fila total
+  const totalRow = { categ:'Total', cant: results.length,
+    idx: results.length ? results.reduce((s,r)=>s+r.idx,0)/results.length : 0, traits:{} };
+  config.forEach(c=>{
+    const vals = results.map(r=>r.traits[c.key]).filter(v=>v!==null && !isNaN(v));
+    totalRow.traits[c.key] = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  rows.push(totalRow);
+  return rows;
+}
+
+document.getElementById('btnCalcIdx').addEventListener('click', ()=>{
+  const config = readIdxConfig();
+  if(!config.length){ alert('Marcá al menos una variable.'); return; }
+  const sum = config.reduce((s,c)=>s+c.weight,0);
+  if(sum !== 100){ alert('La suma de los pesos debe ser exactamente 100. Suma actual: '+sum); return; }
+  const intercept = Number(document.getElementById('idxIntercept').value) || 0;
+  const { results } = computeIndex(config, idxNormMode, intercept);
+  lastIdxResults = { config, results, normMode: idxNormMode, intercept };
+  renderIdxResults(results, config, idxNormMode);
+  document.getElementById('btnSaveIdx').disabled = false;
+  document.getElementById('btnExportIdxExcel').disabled = false;
+  document.getElementById('btnExportIdxPdf').disabled = false;
+});
+
+let idxGroupChartInstance = null;
+let idxScatterChartInstance = null;
+
+function renderIdxResults(results, config, normMode){
+  document.getElementById('idxResultsWrap').style.display='block';
+  const modeLabels = {
+    percentile: 'percentil del proveedor (0-100)',
+    raw: 'valor normalizado min-max simétrico (0-100 dentro de este lote)',
+    raw_pbi: 'estilo Power BI — min-max asimétrico + intercepto'
+  };
+  document.getElementById('idxWeightSum').textContent = `${results.length} animales · valores por rasgo: ${modeLabels[normMode]}`;
+
+  // encabezado de columna por rasgo, con flecha indicando qué se buscó (↑ alto / ↓ bajo)
+  const traitTh = (c)=> `<th title="${c.sign===1?'Buscás valor ALTO en este rasgo':'Buscás valor BAJO en este rasgo'}">${c.key} ${c.sign===1?'↑':'↓'}</th>`;
+
+  // ---- tabla resumen por grupo ----
+  const groupRows = buildGroupSummary(results, config);
+  const headTr = document.getElementById('idxGroupTableHead');
+  headTr.innerHTML = `<th>Categoría</th><th>Cant.</th><th>Índice</th>` + config.map(traitTh).join('');
+  const groupTbody = document.querySelector('#idxGroupTable tbody');
+  groupTbody.innerHTML = groupRows.map(r=>`
+    <tr ${r.categ==='Total'?'style="font-weight:800;border-top:2px solid var(--navy);"':''}>
+      <td>${r.categ}</td><td>${r.cant}</td><td>${fmt(r.idx)}</td>
+      ${config.map(c=>`<td>${r.traits[c.key]===null?'-':fmt(r.traits[c.key])}</td>`).join('')}
+    </tr>`).join('');
+
+  // ---- gráfico comparativo ----
+  if(idxGroupChartInstance) idxGroupChartInstance.destroy();
+  const bandRows = groupRows.filter(r=>r.categ!=='Total');
+  const palette = ['#1e7a3c','#5b9bd5','#8c8c8c','#e0973c','#c0392b'];
+  idxGroupChartInstance = new Chart(document.getElementById('idxGroupChart'), {
+    type:'bar',
+    data:{
+      labels: config.map(c=>c.key + (c.sign===1?' ↑':' ↓')),
+      datasets: bandRows.map((r,i)=>({
+        label: r.categ,
+        data: config.map(c=> r.traits[c.key]===null?0:r.traits[c.key]),
+        backgroundColor: palette[i]
+      }))
+    },
+    options:{
+      responsive:true, animation:false,
+      scales:{ y:{ min:0, max:100, title:{display:true,text: normMode==='raw' ? 'Valor normalizado promedio':'Percentil promedio'} } },
+      plugins:{ legend:{position:'bottom'} }
+    }
+  });
+
+  // ---- tabla detalle por animal ----
+  const detHeadTr = document.getElementById('idxResultsTableHead');
+  detHeadTr.innerHTML = `<th>#</th><th>ID</th><th>Nombre</th><th>Categoría</th><th>Índice</th>` + config.map(traitTh).join('');
+  const tbody = document.querySelector('#idxResultsTable tbody');
+  tbody.innerHTML = results.map((r,i)=>`
+    <tr><td class="rank">${i+1}</td><td>${r.id}</td><td>${r.nombre||'—'}</td><td>${r.categ}</td><td><b>${fmt(r.idx)}</b></td>
+    ${config.map(c=>`<td>${r.traits[c.key]===null?'-':fmt(r.traits[c.key])}</td>`).join('')}
+    </tr>`).join('');
+
+  renderRankRadars();
+  renderIdxScatter();
+  document.getElementById('idxResultsWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+const RANK_BAND_COLORS = { 'Top 10%':'#1e7a3c', 'Top 25%':'#5b9bd5', 'Media':'#8c8c8c', 'Peor 25%':'#e0973c', 'Peor 10%':'#c0392b' };
+
+function buildCategById(){
+  const m = {};
+  if(lastIdxResults) lastIdxResults.results.forEach(r=> m[r.id] = r.categ);
+  return m;
+}
+
+// checkboxes de bandas (se arman una sola vez)
+(function initRankRadarToggles(){
+  const box = document.getElementById('rankRadarBandToggles');
+  box.innerHTML = RANK_BANDS.map(b=>`
+    <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;cursor:pointer;padding:6px 10px;border:1px solid var(--border);border-radius:7px;">
+      <input type="checkbox" class="rankBandToggle" data-band="${b}" checked style="accent-color:${RANK_BAND_COLORS[b]};">
+      <span style="width:10px;height:10px;border-radius:50%;background:${RANK_BAND_COLORS[b]};display:inline-block;"></span>
+      ${b}
+    </label>`).join('');
+  box.querySelectorAll('.rankBandToggle').forEach(cb=> cb.addEventListener('change', renderRankRadars));
+})();
+
+let rankRadarCharts = [];
+function bandAvgPct(band, v, categById){
+  const vals = animals.filter(a=> categById[a.id]===band).map(a=>a.vals[v.key].pct).filter(x=>x!==null && !isNaN(x));
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function bandRadarValue(band, v, categById){
+  const p = bandAvgPct(band, v, categById);
+  if(p===null) return null;
+  return v.invert ? (100-p) : p;
+}
+
+function renderRankRadars(){
+  rankRadarCharts.forEach(c=>c.destroy());
+  rankRadarCharts = [];
+  if(!lastIdxResults) return;
+  const categById = buildCategById();
+  const selectedBands = Array.from(document.querySelectorAll('.rankBandToggle')).filter(cb=>cb.checked).map(cb=>cb.dataset.band);
+
+  for(let c=0;c<3;c++){
+    const outerDiv = document.querySelector(`#rankRadarGrid > div:nth-child(${c+1})`);
+    const vars = catVars(c);
+    if(!vars.length){
+      outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="empty-hint" style="padding:40px 0;">Sin variables en esta categoría</div>`;
+      continue;
+    }
+    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><canvas id="rankRadar-${c}"></canvas>`;
+    const canvas = document.getElementById('rankRadar-'+c);
+    const chart = new Chart(canvas, {
+      type:'radar',
+      data:{
+        labels: vars.map(v=>v.key),
+        datasets: selectedBands.map(band=>({
+          label: band,
+          data: vars.map(v=> bandRadarValue(band, v, categById)),
+          borderColor: RANK_BAND_COLORS[band],
+          backgroundColor: RANK_BAND_COLORS[band]+'22',
+          pointBackgroundColor: RANK_BAND_COLORS[band],
+          borderWidth: 2
+        }))
+      },
+      options:{
+        animation:false, responsive:true,
+        scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:8}, backdropColor:'transparent'}, pointLabels:{font:{size:9}} } },
+        plugins:{ legend:{position:'bottom', labels:{font:{size:10}, boxWidth:10}} }
+      }
+    });
+    rankRadarCharts.push(chart);
+  }
+}
+
+function renderIdxScatter(){
+  if(!lastIdxResults || !catalog.length) return;
+  const selX = document.getElementById('idxScatterX');
+  const selY = document.getElementById('idxScatterY');
+  if(!selX.options.length || !selY.options.length) return;
+  const varX = catalog[Number(selX.value)];
+  const varY = catalog[Number(selY.value)];
+  const normMode = lastIdxResults.normMode || 'percentile';
+  const minMax = (normMode==='raw' || normMode==='raw_pbi') ? computeMinMax() : null;
+
+  // mapa id -> categoría, según el último índice calculado
+  const categById = {};
+  lastIdxResults.results.forEach(r=> categById[r.id] = r.categ);
+
+  const byBand = {};
+  RANK_BANDS.forEach(b=> byBand[b] = []);
+  animals.forEach(a=>{
+    const categ = categById[a.id];
+    if(!categ) return;
+    const x = normalizedTraitValue(a, varX.key, normMode, minMax);
+    const y = normalizedTraitValue(a, varY.key, normMode, minMax);
+    if(x===null || y===null || isNaN(x) || isNaN(y)) return;
+    byBand[categ].push({x, y, id:a.id});
+  });
+
+  if(idxScatterChartInstance) idxScatterChartInstance.destroy();
+  idxScatterChartInstance = new Chart(document.getElementById('idxScatterChart'), {
+    type:'scatter',
+    data:{
+      datasets: RANK_BANDS.map(band=>({
+        label: band,
+        data: byBand[band],
+        backgroundColor: RANK_BAND_COLORS[band],
+        pointRadius:4.5, pointHoverRadius:6.5
+      }))
+    },
+    options:{
+      responsive:true, animation:false,
+      scales:{
+        x:{ min:0, max:100, title:{display:true, text: varX.key} },
+        y:{ min:0, max:100, title:{display:true, text: varY.key} }
+      },
+      plugins:{
+        legend:{position:'bottom'},
+        tooltip:{ callbacks:{ label:(ctx)=> `ID ${ctx.raw.id}: (${fmt(ctx.raw.x)}, ${fmt(ctx.raw.y)})` } }
+      }
+    }
+  });
+}
+document.getElementById('btnPlotScatter').addEventListener('click', renderIdxScatter);
+
+/* ---------- memoria (localStorage) ---------- */
+function loadStore(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveStore(store){ localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
+
+function populateClientLists(){
+  const store = loadStore();
+  const clients = Object.keys(store);
+  ['clientList','clientList2'].forEach(id=>{
+    const dl = document.getElementById(id);
+    dl.innerHTML = clients.map(c=>`<option value="${c}">`).join('');
+  });
+  if(customerName && !document.getElementById('idxClient').value){
+    document.getElementById('idxClient').value = customerName;
+  }
+}
+
+document.getElementById('btnSaveIdx').addEventListener('click', ()=>{
+  if(!lastIdxResults) return;
+  const client = norm(document.getElementById('idxClient').value) || 'Sin nombre';
+  let name = norm(document.getElementById('idxName').value);
+  if(!name) name = 'Índice ' + new Date().toLocaleString('es-AR');
+  const store = loadStore();
+  if(!store[client]) store[client] = [];
+  store[client].push({
+    id: Date.now(),
+    name, date: new Date().toISOString(),
+    config: lastIdxResults.config,
+    results: lastIdxResults.results,
+    normMode: lastIdxResults.normMode || 'percentile',
+    intercept: lastIdxResults.intercept || 0
+  });
+  saveStore(store);
+  populateClientLists();
+  alert(`Índice "${name}" guardado para ${client}.`);
+});
+
+document.getElementById('btnLoadHistory').addEventListener('click', ()=>{
+  const client = norm(document.getElementById('histClient').value);
+  const store = loadStore();
+  const list = document.getElementById('historyList');
+  const items = store[client] || [];
+  if(!items.length){ list.innerHTML = '<div class="empty-hint">Sin índices guardados para este cliente.</div>'; return; }
+  list.innerHTML = items.map(it=>`
+    <div class="history-item">
+      <div class="meta"><b>${it.name}</b><span>${new Date(it.date).toLocaleString('es-AR')} · ${it.config.length} variables · ${it.results.length} animales · ${it.normMode==='raw'?'valor normalizado':'percentil'}</span></div>
+      <div class="acts">
+        <button class="btn ghost sm" onclick="loadHistoryItem('${client}', ${it.id})">Cargar</button>
+        <button class="btn ghost sm" onclick="deleteHistoryItem('${client}', ${it.id})">Eliminar</button>
+      </div>
+    </div>`).join('');
+});
+
+function loadHistoryItem(client, id){
+  const store = loadStore();
+  const item = (store[client]||[]).find(x=>x.id===id);
+  if(!item) return;
+  document.getElementById('idxClient').value = client;
+  document.getElementById('idxName').value = item.name;
+  if(animals.length){
+    document.querySelectorAll('#idxVarTable tbody tr').forEach((tr,idx)=>{
+      const v = catalog[idx];
+      const cfg = item.config.find(c=>c.key===v.key);
+      tr.querySelector('.idxInclude').checked = !!cfg;
+      if(cfg){
+        tr.querySelector('.idxWeight').value = cfg.weight;
+        const tg = tr.querySelector('.sign-toggle');
+        tg.querySelectorAll('button').forEach(b=>b.classList.toggle('active', Number(b.dataset.sign)===cfg.sign));
+      }
+    });
+  }
+  const restoredMode = item.normMode || 'percentile';
+  const restoredIntercept = item.intercept || 0;
+  idxNormMode = restoredMode;
+  document.querySelectorAll('#normModeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.mode===restoredMode));
+  document.getElementById('interceptField').style.display = restoredMode==='raw_pbi' ? 'flex' : 'none';
+  document.getElementById('idxIntercept').value = restoredIntercept;
+  document.getElementById('normModeHint').textContent = NORM_MODE_HINTS[restoredMode] || '';
+  lastIdxResults = { config:item.config, results:item.results, normMode:restoredMode, intercept:restoredIntercept };
+  renderIdxResults(item.results, item.config, restoredMode);
+  document.getElementById('btnSaveIdx').disabled = false;
+  document.getElementById('btnExportIdxExcel').disabled = false;
+  document.getElementById('btnExportIdxPdf').disabled = false;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deleteHistoryItem(client, id){
+  if(!confirm('¿Eliminar este índice guardado?')) return;
+  const store = loadStore();
+  store[client] = (store[client]||[]).filter(x=>x.id!==id);
+  saveStore(store);
+  document.getElementById('btnLoadHistory').click();
+}
+
+/* ---------- export excel / pdf del índice ---------- */
+document.getElementById('btnExportIdxExcel').addEventListener('click', ()=>{
+  if(!lastIdxResults) return;
+  const { config, results, normMode, intercept } = lastIdxResults;
+  const client = norm(document.getElementById('idxClient').value) || 'cliente';
+  const EXPORT_MODE_LABELS = { percentile:'Percentil del proveedor', raw:'Valor crudo normalizado (min-max simétrico dentro del lote)', raw_pbi:`Estilo Power BI (asimétrico, intercepto ${intercept||0})` };
+  const modeLabel = EXPORT_MODE_LABELS[normMode] || normMode;
+
+  const detRows = [['Normalización:', modeLabel], [],
+    ['#','ID','Nombre','Sexo','Categoría','Índice', ...config.map(c=>c.key+(c.sign===1?' ↑':' ↓'))]];
+  results.forEach((r,i)=> detRows.push([i+1, r.id, r.nombre||'', r.sexo||'', r.categ, Number(r.idx.toFixed(2)),
+    ...config.map(c=> r.traits[c.key]===null?'':Number(r.traits[c.key].toFixed(2)))]));
+  const wsDet = XLSX.utils.aoa_to_sheet(detRows);
+
+  const groupRows = buildGroupSummary(results, config);
+  const grRows = [['Normalización:', modeLabel], [],
+    ['Categoría','Cant.','Índice', ...config.map(c=>c.key+(c.sign===1?' ↑':' ↓'))]];
+  groupRows.forEach(r=> grRows.push([r.categ, r.cant, Number(r.idx.toFixed(2)),
+    ...config.map(c=> r.traits[c.key]===null?'':Number(r.traits[c.key].toFixed(2)))]));
+  const wsGr = XLSX.utils.aoa_to_sheet(grRows);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wsGr, 'Resumen por grupo');
+  XLSX.utils.book_append_sheet(wb, wsDet, 'Detalle por animal');
+  XLSX.writeFile(wb, `Indice_Seleccion_${client.replace(/[^a-z0-9]+/gi,'_')}.xlsx`);
+});
+
+document.getElementById('btnExportIdxPdf').addEventListener('click', ()=>{
+  if(!lastIdxResults) return;
+  const { config, results, normMode, intercept } = lastIdxResults;
+  const EXPORT_MODE_LABELS = { percentile:'Percentil del proveedor', raw:'Valor crudo normalizado (min-max simétrico dentro del lote)', raw_pbi:`Estilo Power BI (asimétrico, intercepto ${intercept||0})` };
+  const modeLabel = EXPORT_MODE_LABELS[normMode] || normMode;
+  const client = norm(document.getElementById('idxClient').value) || 'Cliente';
+  const name = norm(document.getElementById('idxName').value) || 'Índice de Selección';
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
+  const pageW = doc.internal.pageSize.getWidth();
+
+  // encabezados de columna: usamos (+)/(-) en vez de flechas Unicode, que jsPDF no renderiza bien
+  const pdfTraitHead = (c)=> c.key + (c.sign===1 ? ' (+)' : ' (-)');
+  const fmt0 = (n)=> n===null || n===undefined || isNaN(n) ? '-' : Math.round(n).toLocaleString('es-AR');
+  const fmt1 = (n)=> n===null || n===undefined || isNaN(n) ? '-' : (Math.round(n*10)/10).toLocaleString('es-AR',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+  doc.setFontSize(16); doc.setTextColor(11,20,66);
+  doc.text('AltaGEN Beef — Índice de Selección', 14, 16);
+  doc.setFontSize(10); doc.setTextColor(60,60,60);
+  doc.text(`Cliente: ${client}    |    Índice: ${name}    |    Fecha: ${new Date().toLocaleDateString('es-AR')}    |    Normalización: ${modeLabel}`, 14, 23);
+
+  doc.setFontSize(10); doc.setTextColor(30,30,30);
+  doc.text('Variables incluidas ((+) = busco valor alto, (-) = busco valor bajo — ver encabezados de las tablas):', 14, 32);
+  const cfgRows = config.map(c=>[c.key, c.weight+'%']);
+  doc.autoTable({ startY:36, head:[['Variable','Peso']], body:cfgRows, styles:{fontSize:8}, headStyles:{fillColor:[11,20,66]}, margin:{left:14,right:14}, tableWidth: pageW-28 });
+
+  const groupRows = buildGroupSummary(results, config);
+  doc.text('Resumen por grupo de ranking:', 14, doc.lastAutoTable.finalY + 10);
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 14,
+    head:[['Categoría','Cant.','Índice', ...config.map(pdfTraitHead)]],
+    body: groupRows.map(r=>[r.categ, r.cant, fmt1(r.idx), ...config.map(c=> fmt1(r.traits[c.key]))]),
+    styles:{fontSize:8}, headStyles:{fillColor:[11,20,66], fontSize:7.5}, margin:{left:14,right:14}, tableWidth: pageW-28
+  });
+
+  // gráfico comparativo, respetando la proporción real del canvas para que no se vea distorsionado
+  if(idxGroupChartInstance){
+    const canvasEl = document.getElementById('idxGroupChart');
+    const aspect = canvasEl.height / canvasEl.width;
+    const imgW = pageW - 28;
+    const imgH = Math.min(imgW * aspect, 130);
+    let y = doc.lastAutoTable.finalY + 10;
+    if(y + imgH + 10 > doc.internal.pageSize.getHeight()){ doc.addPage('a4','landscape'); y = 16; }
+    doc.text('Comparación genética entre grupos:', 14, y);
+    doc.addImage(idxGroupChartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
+  }
+
+  doc.addPage('a4','landscape');
+  const rankRows = results.map((r,i)=>[i+1, r.id, r.nombre||'-', r.categ, fmt0(r.idx), ...config.map(c=> fmt0(r.traits[c.key]))]);
+  doc.setFontSize(11); doc.setTextColor(11,20,66);
+  doc.text('Detalle por animal:', 14, 16);
+  doc.autoTable({ startY:20, head:[['#','ID','Nombre','Categ.','Índice', ...config.map(pdfTraitHead)]], body:rankRows, styles:{fontSize:7.5}, headStyles:{fillColor:[217,154,78], fontSize:7.5}, margin:{left:14,right:14}, tableWidth: pageW-28 });
+
+  doc.save(`Indice_Seleccion_${client.replace(/[^a-z0-9]+/gi,'_')}.pdf`);
+});
+
+/* ---------- respaldo JSON ---------- */
+document.getElementById('btnExportBackup').addEventListener('click', ()=>{
+  const store = loadStore();
+  const blob = new Blob([JSON.stringify(store,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'altagen_indices_backup.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('btnImportBackup').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const incoming = JSON.parse(ev.target.result);
+      const store = loadStore();
+      Object.keys(incoming).forEach(client=>{
+        if(!store[client]) store[client] = [];
+        store[client] = store[client].concat(incoming[client]);
+      });
+      saveStore(store);
+      populateClientLists();
+      alert('Respaldo importado correctamente.');
+    }catch(err){ alert('Archivo inválido.'); }
+  };
+  reader.readAsText(file);
+});
+</script>
+
+<script>
+/* ============================================================
+   PWA: instalación + recepción de archivo compartido (WhatsApp)
+============================================================ */
+
+// 1. Registrar el service worker (necesario para instalar y para recibir el share)
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(e=>console.error('No se pudo registrar el service worker:', e));
+  });
+}
+
+// 2. Botón "Instalar app" (aparece solo si el navegador ofrece la instalación)
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('btnInstallApp');
+  if(btn) btn.style.display = 'inline-flex';
+});
+window.addEventListener('DOMContentLoaded', ()=>{
+  const btn = document.getElementById('btnInstallApp');
+  if(btn){
+    btn.addEventListener('click', async ()=>{
+      if(!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      btn.style.display = 'none';
+    });
+  }
+});
+
+// 3. Recibir el Excel compartido desde WhatsApp (u otra app) vía Web Share Target
+function openShareDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open('altagen-share-db', 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore('shared-files');
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function checkForSharedFile(){
+  if(new URLSearchParams(location.search).get('shared') !== '1') return;
+  try{
+    const db = await openShareDB();
+    const file = await new Promise((resolve,reject)=>{
+      const tx = db.transaction('shared-files','readonly');
+      const req = tx.objectStore('shared-files').get('pending');
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+    if(file){
+      // reutiliza exactamente la misma función que usa el botón de carga manual
+      handleFile(file);
+      const db2 = await openShareDB();
+      const tx2 = db2.transaction('shared-files','readwrite');
+      tx2.objectStore('shared-files').delete('pending');
+    }
+  }catch(e){ console.error('Error recibiendo archivo compartido:', e); }
+  history.replaceState(null, '', location.pathname);
+}
+window.addEventListener('load', checkForSharedFile);
+</script>
+</body>
+</html>
