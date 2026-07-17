@@ -136,7 +136,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 .step-item .tx span{ font-size:12.5px; color:#4b5266; line-height:1.45; }
 
 .chart-row{ display:grid; grid-template-columns:1.1fr .9fr; gap:18px; margin-bottom:22px; align-items:center;}
-.chart-row canvas{ max-height:210px; }
+.chart-row canvas{ height:210px !important; width:100% !important; }
 .mini-table{ width:100%; border-collapse:collapse; font-size:12px; }
 .mini-table th{ text-align:left; padding:4px 6px; color:var(--gray); border-bottom:1px solid var(--border); font-weight:600;}
 .mini-table td{ padding:4px 6px; border-bottom:1px solid #f0f1f5; }
@@ -144,7 +144,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 
 .scatter-block{ margin-bottom:18px; }
 .scatter-block .ttl{ text-align:center; font-weight:700; font-size:12.5px; color:var(--navy); margin-bottom:4px;}
-.scatter-block canvas{ max-height:150px; }
+.scatter-block canvas{ height:150px !important; width:100% !important; }
 
 .ficha-block{ border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
 .ficha-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:2px solid var(--navy3); padding-bottom:6px;}
@@ -186,10 +186,15 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 .badge-count{ background:var(--orange); color:#fff; border-radius:20px; padding:1px 8px; font-size:11px; margin-left:6px;}
 
 @media print{ .topbar,.card,.idx-toolbar{ display:none !important; } }
+.chart-box{ position:relative; height:320px; width:100%; }
+.chart-box.tall{ height:380px; }
+
 /* ============================================================
    RESPONSIVE / MOBILE
 ============================================================ */
 @media (max-width: 780px){
+  .chart-box{ height:300px; }
+  .chart-box.tall{ height:420px; }
   .topbar{ flex-wrap:wrap; padding:0 12px; }
   .topbar .brand{ padding:10px 10px 10px 0; font-size:14px; }
   .tabbtn{ padding:12px 10px; font-size:13px; }
@@ -394,16 +399,16 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 
           <h2 style="margin-top:26px;">Comparación genética entre grupos</h2>
           <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
-            <canvas id="idxGroupChart" height="90"></canvas>
+            <div class="chart-box tall"><canvas id="idxGroupChart"></canvas></div>
           </div>
 
           <h2 style="margin-top:26px;">Telarañas por grupo de ranking</h2>
           <div class="sub">Las mismas 3 telarañas del informe (Crecimiento y tamaño adulto, Rasgos maternales, Rasgos de Carcasa), pero superponiendo el promedio de cada grupo de ranking en vez del promedio general. Elegí qué grupos mostrar. Para agregar una variable de "Otras variables / índices" a alguna de estas 3 telarañas, reasignale la categoría en la tabla de "Variables detectadas" de la pestaña Informe.</div>
           <div class="idx-toolbar" id="rankRadarBandToggles"></div>
           <div id="rankRadarGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
-            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><canvas id="rankRadar-0"></canvas></div>
-            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><canvas id="rankRadar-1"></canvas></div>
-            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><canvas id="rankRadar-2"></canvas></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><div class="chart-box"><canvas id="rankRadar-0"></canvas></div></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><div class="chart-box"><canvas id="rankRadar-1"></canvas></div></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><div class="chart-box"><canvas id="rankRadar-2"></canvas></div></div>
           </div>
 
           <h2 style="margin-top:26px;">Explorar variables por grupo de ranking</h2>
@@ -420,7 +425,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
             <button class="btn ghost sm" id="btnPlotScatter">Graficar</button>
           </div>
           <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
-            <canvas id="idxScatterChart" height="90"></canvas>
+            <div class="chart-box"><canvas id="idxScatterChart"></canvas></div>
           </div>
 
           <h2 style="margin-top:26px;">Detalle por animal — <span id="idxWeightSum"></span></h2>
@@ -501,7 +506,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 
         <h2 style="margin-top:24px;">Comparación por variable</h2>
         <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
-          <canvas id="compBarChart" height="90"></canvas>
+          <div class="chart-box tall"><canvas id="compBarChart"></canvas></div>
         </div>
 
         <table class="results-table" id="compTable" style="margin-top:16px;">
@@ -511,9 +516,9 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
 
         <h2 style="margin-top:26px;">Telarañas comparadas</h2>
         <div id="compRadarGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
-          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><canvas id="compRadar-0"></canvas></div>
-          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><canvas id="compRadar-1"></canvas></div>
-          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><canvas id="compRadar-2"></canvas></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><div class="chart-box"><canvas id="compRadar-0"></canvas></div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><div class="chart-box"><canvas id="compRadar-1"></canvas></div></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><div class="chart-box"><canvas id="compRadar-2"></canvas></div></div>
         </div>
 
         <h2 style="margin-top:26px;">Clasificación según el Índice de Selección</h2>
@@ -526,7 +531,7 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
           <div id="compIdxWarning" style="display:none; background:#fff8ef; border:1px solid #f0d9b5; border-radius:8px; padding:10px 14px; font-size:12.5px; color:#7a5518; margin-bottom:14px;"></div>
 
           <div style="background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;">
-            <canvas id="compIdxChart" height="80"></canvas>
+            <div class="chart-box"><canvas id="compIdxChart"></canvas></div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:16px;">
@@ -540,11 +545,44 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
             </div>
           </div>
 
-          <h3 style="margin-top:20px; font-size:14px;">Detalle combinado</h3>
+          <h3 style="margin-top:20px; font-size:14px;">Detalle combinado — ordenado por índice</h3>
           <table class="results-table" id="compIdxDetailTable">
-            <thead><tr><th>Población</th><th>#</th><th>ID</th><th>Nombre</th><th>Categoría</th><th>Índice</th></tr></thead>
+            <thead><tr id="compIdxDetailTableHead"></tr></thead>
             <tbody></tbody>
           </table>
+
+          <h3 style="margin-top:26px; font-size:14px;">Telarañas por clasificación</h3>
+          <div class="sub">Elegí qué banda de cada población mostrar en las telarañas (por ejemplo, el Top 10% de A contra el Top 10% de B, o cualquier combinación).</div>
+          <div class="idx-toolbar">
+            <div class="field">
+              <label id="compIdxRadarLabelA">Banda — Población A</label>
+              <select id="compIdxRadarBandA">
+                <option value="Todos">Todos</option>
+                <option value="Top 10%">Top 10%</option>
+                <option value="Top 25%">Top 25%</option>
+                <option value="Media">Media</option>
+                <option value="Peor 25%">Peor 25%</option>
+                <option value="Peor 10%">Peor 10%</option>
+              </select>
+            </div>
+            <div class="field">
+              <label id="compIdxRadarLabelB">Banda — Población B</label>
+              <select id="compIdxRadarBandB">
+                <option value="Todos">Todos</option>
+                <option value="Top 10%">Top 10%</option>
+                <option value="Top 25%">Top 25%</option>
+                <option value="Media">Media</option>
+                <option value="Peor 25%">Peor 25%</option>
+                <option value="Peor 10%">Peor 10%</option>
+              </select>
+            </div>
+            <button class="btn ghost sm" id="btnGraficarCompIdxRadar">Graficar</button>
+          </div>
+          <div id="compIdxRadarGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Crecimiento y tamaño adulto</div><div class="chart-box"><canvas id="compIdxRadar-0"></canvas></div></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos maternales</div><div class="chart-box"><canvas id="compIdxRadar-1"></canvas></div></div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;"><div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">Rasgos de Carcasa</div><div class="chart-box"><canvas id="compIdxRadar-2"></canvas></div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1106,7 +1144,7 @@ function instantiateRadarCharts(){
         borderColor:'#2f8fd6', backgroundColor:'rgba(47,143,214,0.18)', pointBackgroundColor:'#2f8fd6'
       }]},
       options:{
-        animation:false, responsive:true,
+        animation:false, responsive:true, maintainAspectRatio:false,
         scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:9}, backdropColor:'transparent'}, pointLabels:{font:{size:9.5}} } },
         plugins:{
           legend:{display:false},
@@ -1158,7 +1196,7 @@ function instantiateScatterCharts(){
       type:'scatter',
       data:{ datasets:[{ data:pts, backgroundColor:'#2f8fd6', pointRadius:3 }] },
       options:{
-        animation:false, responsive:true,
+        animation:false, responsive:true, maintainAspectRatio:false,
         scales:{ x:{ min:0,max:100, title:{display:true,text:pr[0],font:{size:9}}, ticks:{font:{size:8}} },
                  y:{ min:0,max:100, title:{display:true,text:pr[1],font:{size:9}}, ticks:{font:{size:8}} } },
         plugins:{ legend:{display:false} }
@@ -1505,8 +1543,11 @@ function renderIdxResults(results, config, normMode){
       }))
     },
     options:{
-      responsive:true, animation:false,
-      scales:{ y:{ min:0, max:100, title:{display:true,text: normMode==='raw' ? 'Valor normalizado promedio':'Percentil promedio'} } },
+      responsive:true, animation:false, maintainAspectRatio:false,
+      scales:{
+        y:{ min:0, max:100, title:{display:true,text: normMode==='raw' ? 'Valor normalizado promedio':'Percentil promedio'} },
+        x:{ ticks:{ maxRotation:75, minRotation:60, font:{size:9.5} } }
+      },
       plugins:{ legend:{position:'bottom'} }
     }
   });
@@ -1571,7 +1612,7 @@ function renderRankRadars(){
       outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="empty-hint" style="padding:40px 0;">Sin variables en esta categoría</div>`;
       continue;
     }
-    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><canvas id="rankRadar-${c}"></canvas>`;
+    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="chart-box"><canvas id="rankRadar-${c}"></canvas></div>`;
     const canvas = document.getElementById('rankRadar-'+c);
     const chart = new Chart(canvas, {
       type:'radar',
@@ -1587,7 +1628,7 @@ function renderRankRadars(){
         }))
       },
       options:{
-        animation:false, responsive:true,
+        animation:false, responsive:true, maintainAspectRatio:false,
         scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:8}, backdropColor:'transparent'}, pointLabels:{font:{size:9}} } },
         plugins:{ legend:{position:'bottom', labels:{font:{size:10}, boxWidth:10}} }
       }
@@ -1633,7 +1674,7 @@ function renderIdxScatter(){
       }))
     },
     options:{
-      responsive:true, animation:false,
+      responsive:true, animation:false, maintainAspectRatio:false,
       scales:{
         x:{ min:0, max:100, title:{display:true, text: varX.key} },
         y:{ min:0, max:100, title:{display:true, text: varY.key} }
@@ -1805,16 +1846,26 @@ document.getElementById('btnExportIdxPdf').addEventListener('click', ()=>{
   });
 
   // gráfico comparativo, respetando la proporción real del canvas para que no se vea distorsionado
-  if(idxGroupChartInstance){
-    const canvasEl = document.getElementById('idxGroupChart');
+  const addChartImage = (chartInstance, title, startY)=>{
+    if(!chartInstance) return startY;
+    const canvasEl = chartInstance.canvas;
     const aspect = canvasEl.height / canvasEl.width;
     const imgW = pageW - 28;
     const imgH = Math.min(imgW * aspect, 130);
-    let y = doc.lastAutoTable.finalY + 10;
-    if(y + imgH + 10 > doc.internal.pageSize.getHeight()){ doc.addPage('a4','landscape'); y = 16; }
-    doc.text('Comparación genética entre grupos:', 14, y);
-    doc.addImage(idxGroupChartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
-  }
+    let y = startY;
+    if(y + imgH + 14 > doc.internal.pageSize.getHeight()){ doc.addPage('a4','landscape'); y = 16; }
+    doc.setFontSize(10.5); doc.setTextColor(30,30,30);
+    doc.text(title, 14, y);
+    doc.addImage(chartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
+    return y + imgH + 14;
+  };
+
+  let chartY = doc.lastAutoTable.finalY + 10;
+  chartY = addChartImage(idxGroupChartInstance, 'Comparación genética entre grupos:', chartY);
+  chartY = addChartImage(idxScatterChartInstance, 'Explorador de variables por grupo de ranking:', chartY);
+  rankRadarCharts.forEach((chart,i)=>{
+    chartY = addChartImage(chart, `Telaraña por ranking — ${CATS[i]}:`, chartY);
+  });
 
   doc.addPage('a4','landscape');
   const rankRows = results.map((r,i)=>[i+1, r.id, r.nombre||'-', r.categ, fmt0(r.idx), ...config.map(c=> fmt0(r.traits[c.key]))]);
@@ -2000,8 +2051,11 @@ function renderComparacion(){
       ]
     },
     options:{
-      responsive:true, animation:false,
-      scales:{ y:{ min:0, max:100, title:{display:true, text:'Percentil promedio'} } },
+      responsive:true, animation:false, maintainAspectRatio:false,
+      scales:{
+        y:{ min:0, max:100, title:{display:true, text:'Percentil promedio'} },
+        x:{ ticks:{ maxRotation:75, minRotation:60, font:{size:9.5} } }
+      },
       plugins:{ legend:{position:'bottom'} }
     }
   });
@@ -2016,7 +2070,7 @@ function renderComparacion(){
       outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="empty-hint" style="padding:40px 0;">Sin variables en esta categoría</div>`;
       continue;
     }
-    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><canvas id="compRadar-${c}"></canvas>`;
+    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="chart-box"><canvas id="compRadar-${c}"></canvas></div>`;
     const canvas = document.getElementById('compRadar-'+c);
     const chart = new Chart(canvas, {
       type:'radar',
@@ -2028,7 +2082,7 @@ function renderComparacion(){
         ]
       },
       options:{
-        animation:false, responsive:true,
+        animation:false, responsive:true, maintainAspectRatio:false,
         scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:8}, backdropColor:'transparent'}, pointLabels:{font:{size:9}} } },
         plugins:{ legend:{position:'bottom', labels:{font:{size:10}, boxWidth:10}} }
       }
@@ -2053,6 +2107,26 @@ document.getElementById('btnExportCompararExcel').addEventListener('click', ()=>
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Comparación');
+
+  // si se aplicó un índice de selección a ambas poblaciones, se agregan esas hojas también
+  if(compIdxResultsA && compIdxResultsB && compIdxUsableConfig){
+    const groupA = buildGroupSummary(compIdxResultsA, compIdxUsableConfig);
+    const groupB = buildGroupSummary(compIdxResultsB, compIdxUsableConfig);
+    const grRows = [['Población','Categoría','Cant.','Índice']];
+    groupA.forEach(r=> grRows.push([popA.label, r.categ, r.cant, Number(r.idx.toFixed(2))]));
+    groupB.forEach(r=> grRows.push([popB.label, r.categ, r.cant, Number(r.idx.toFixed(2))]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(grRows), 'Indice - Resumen grupos');
+
+    const combined = [
+      ...compIdxResultsA.map(r=>({pop:popA.label, r})),
+      ...compIdxResultsB.map(r=>({pop:popB.label, r}))
+    ].sort((x,y)=> y.r.idx - x.r.idx);
+    const detRows = [['#','Población','ID','Nombre','Categoría','Índice', ...compIdxUsableConfig.map(c=>c.key+(c.sign===1?' (+)':' (-)'))]];
+    combined.forEach((x,i)=> detRows.push([i+1, x.pop, x.r.id, x.r.nombre||'', x.r.categ, Number(x.r.idx.toFixed(2)),
+      ...compIdxUsableConfig.map(c=> x.r.traits[c.key]===null?'':Number(x.r.traits[c.key].toFixed(2)))]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detRows), 'Indice - Detalle combinado');
+  }
+
   XLSX.writeFile(wb, `Comparacion_${popA.label}_vs_${popB.label}`.replace(/[^a-z0-9_]+/gi,'_')+'.xlsx');
 });
 
@@ -2063,6 +2137,7 @@ document.getElementById('btnExportCompararPdf').addEventListener('click', ()=>{
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   doc.setFontSize(16); doc.setTextColor(11,20,66);
   doc.text(`AltaGEN Beef — Comparación: ${popA.label} vs ${popB.label}`, 14, 16);
   doc.setFontSize(10); doc.setTextColor(60,60,60);
@@ -2074,15 +2149,55 @@ document.getElementById('btnExportCompararPdf').addEventListener('click', ()=>{
   });
   doc.autoTable({ startY:30, head:[['Variable', popA.label, popB.label, 'Diferencia']], body:rows, styles:{fontSize:8}, headStyles:{fillColor:[11,20,66]}, margin:{left:14,right:14}, tableWidth: pageW-28 });
 
-  if(compBarChartInstance){
-    const canvasEl = document.getElementById('compBarChart');
+  const addChartImage = (chartInstance, title, startY)=>{
+    if(!chartInstance) return startY;
+    const canvasEl = chartInstance.canvas;
     const aspect = canvasEl.height / canvasEl.width;
     const imgW = pageW - 28;
     const imgH = Math.min(imgW*aspect, 120);
-    let y = doc.lastAutoTable.finalY + 10;
-    if(y + imgH + 10 > doc.internal.pageSize.getHeight()){ doc.addPage('a4','landscape'); y = 16; }
-    doc.text('Comparación por variable:', 14, y);
-    doc.addImage(compBarChartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
+    let y = startY;
+    if(y + imgH + 14 > pageH){ doc.addPage('a4','landscape'); y = 16; }
+    doc.setFontSize(10.5); doc.setTextColor(30,30,30);
+    doc.text(title, 14, y);
+    doc.addImage(chartInstance.toBase64Image(), 'PNG', 14, y+4, imgW, imgH);
+    return y + imgH + 14;
+  };
+
+  let y = doc.lastAutoTable.finalY + 10;
+  y = addChartImage(compBarChartInstance, 'Comparación por variable:', y);
+  compRadarCharts.forEach((chart,i)=>{ y = addChartImage(chart, `Telaraña comparada — ${CATS[i]}:`, y); });
+
+  // si se aplicó un índice de selección a ambas poblaciones, se agrega esa sección también
+  if(compIdxResultsA && compIdxResultsB && compIdxUsableConfig){
+    doc.addPage('a4','landscape');
+    doc.setFontSize(13); doc.setTextColor(11,20,66);
+    doc.text('Clasificación según el Índice de Selección', 14, 16);
+    const groupA = buildGroupSummary(compIdxResultsA, compIdxUsableConfig);
+    const groupB = buildGroupSummary(compIdxResultsB, compIdxUsableConfig);
+    doc.setFontSize(10); doc.setTextColor(60,60,60);
+    doc.text(popA.label, 14, 24);
+    doc.autoTable({ startY:27, head:[['Categoría','Cant.','Índice']], body:groupA.map(r=>[r.categ,r.cant,fmt(r.idx)]), styles:{fontSize:8}, headStyles:{fillColor:[91,155,213]}, margin:{left:14}, tableWidth:130 });
+    const finalYA = doc.lastAutoTable.finalY;
+    doc.text(popB.label, 150, 24);
+    doc.autoTable({ startY:27, head:[['Categoría','Cant.','Índice']], body:groupB.map(r=>[r.categ,r.cant,fmt(r.idx)]), styles:{fontSize:8}, headStyles:{fillColor:[217,154,78]}, margin:{left:150}, tableWidth:130 });
+    let y2 = Math.max(finalYA, doc.lastAutoTable.finalY) + 10;
+    y2 = addChartImage(compIdxChartInstance, 'Índice promedio por banda — comparado:', y2);
+    compIdxRadarCharts.forEach((chart,i)=>{ y2 = addChartImage(chart, `Telaraña por clasificación — ${CATS[i]}:`, y2); });
+
+    const combined = [
+      ...compIdxResultsA.map(r=>({pop:popA.label, r})),
+      ...compIdxResultsB.map(r=>({pop:popB.label, r}))
+    ].sort((x,y3)=> y3.r.idx - x.r.idx);
+    doc.addPage('a4','landscape');
+    doc.setFontSize(11); doc.setTextColor(11,20,66);
+    doc.text('Detalle combinado — ordenado por índice:', 14, 16);
+    const pdfTraitHead2 = (c)=> c.key + (c.sign===1?' (+)':' (-)');
+    doc.autoTable({
+      startY:20,
+      head:[['#','Población','ID','Nombre','Categ.','Índice', ...compIdxUsableConfig.map(pdfTraitHead2)]],
+      body: combined.map((x,i)=>[i+1, x.pop, x.r.id, x.r.nombre||'-', x.r.categ, fmt(x.r.idx), ...compIdxUsableConfig.map(c=> x.r.traits[c.key]===null?'-':fmt(x.r.traits[c.key]))]),
+      styles:{fontSize:7}, headStyles:{fillColor:[217,154,78], fontSize:7}, margin:{left:14,right:14}, tableWidth: pageW-28
+    });
   }
 
   doc.save(`Comparacion_${popA.label}_vs_${popB.label}`.replace(/[^a-z0-9_]+/gi,'_')+'.pdf');
@@ -2134,6 +2249,8 @@ function computeIndexForPopulation(pop, config, normMode, intercept){
 }
 
 let compIdxChartInstance = null;
+let compIdxResultsA = null, compIdxResultsB = null, compIdxUsableConfig = null;
+let compIdxRadarCharts = [];
 
 document.getElementById('btnAplicarIndiceComparar').addEventListener('click', ()=>{
   if(!popA || !popB) return;
@@ -2167,6 +2284,12 @@ document.getElementById('btnAplicarIndiceComparar').addEventListener('click', ()
   const groupA = buildGroupSummary(resultsA, usableConfig);
   const groupB = buildGroupSummary(resultsB, usableConfig);
 
+  // se guardan globalmente para reusar en "Telarañas por clasificación"
+  compIdxResultsA = resultsA;
+  compIdxResultsB = resultsB;
+  compIdxUsableConfig = usableConfig;
+  populateCompIdxBandSelectors();
+
   document.getElementById('compIdxEmptyHint').style.display = 'none';
   document.getElementById('compIdxResults').style.display = 'block';
   document.getElementById('compIdxTableTitleA').textContent = popA.label;
@@ -2194,21 +2317,92 @@ document.getElementById('btnAplicarIndiceComparar').addEventListener('click', ()
       ]
     },
     options:{
-      responsive:true, animation:false,
+      responsive:true, animation:false, maintainAspectRatio:false,
       scales:{ y:{ title:{display:true, text:'Índice promedio'} } },
       plugins:{ legend:{position:'bottom'} }
     }
   });
 
-  // detalle combinado
-  const detRows = [
-    ...resultsA.map((r,i)=>({pop:popA.label, i, r})),
-    ...resultsB.map((r,i)=>({pop:popB.label, i, r}))
-  ];
-  document.querySelector('#compIdxDetailTable tbody').innerHTML = detRows.map(x=>`
-    <tr><td>${x.pop}</td><td class="rank">${x.i+1}</td><td>${x.r.id}</td><td>${x.r.nombre||'—'}</td><td>${x.r.categ}</td><td><b>${fmt(x.r.idx)}</b></td></tr>
-  `).join('');
+  // detalle combinado: TODOS los animales de ambas poblaciones juntos,
+  // ordenados globalmente por índice (no por población), con los rasgos del índice
+  const combined = [
+    ...resultsA.map(r=>({pop:popA.label, r})),
+    ...resultsB.map(r=>({pop:popB.label, r}))
+  ].sort((x,y)=> y.r.idx - x.r.idx);
+
+  const detHead = document.getElementById('compIdxDetailTableHead');
+  detHead.innerHTML = `<th>#</th><th>Población</th><th>ID</th><th>Nombre</th><th>Categoría</th><th>Índice</th>` +
+    usableConfig.map(c=>`<th>${c.key} ${c.sign===1?'↑':'↓'}</th>`).join('');
+
+  document.querySelector('#compIdxDetailTable tbody').innerHTML = combined.map((x,i)=>`
+    <tr><td class="rank">${i+1}</td><td>${x.pop}</td><td>${x.r.id}</td><td>${x.r.nombre||'—'}</td><td>${x.r.categ}</td><td><b>${fmt(x.r.idx)}</b></td>
+    ${usableConfig.map(c=>`<td>${x.r.traits[c.key]===null?'-':fmt(x.r.traits[c.key])}</td>`).join('')}
+    </tr>`).join('');
 });
+
+function populateCompIdxBandSelectors(){
+  document.getElementById('compIdxRadarLabelA').textContent = 'Banda — ' + popA.label;
+  document.getElementById('compIdxRadarLabelB').textContent = 'Banda — ' + popB.label;
+}
+
+function renderCompIdxRadar(){
+  if(!popA || !popB || !compIdxResultsA || !compIdxResultsB) return;
+  const bandA = document.getElementById('compIdxRadarBandA').value;
+  const bandB = document.getElementById('compIdxRadarBandB').value;
+
+  const categByIdA = {}; compIdxResultsA.forEach(r=> categByIdA[r.id] = r.categ);
+  const categByIdB = {}; compIdxResultsB.forEach(r=> categByIdB[r.id] = r.categ);
+
+  const animalsA = bandA==='Todos' ? popA.animals : popA.animals.filter(a=> categByIdA[a.id]===bandA);
+  const animalsB = bandB==='Todos' ? popB.animals : popB.animals.filter(a=> categByIdB[a.id]===bandB);
+
+  if(!animalsA.length || !animalsB.length){
+    alert('Alguna de las dos bandas seleccionadas no tiene animales para graficar.');
+    return;
+  }
+
+  const avgPctSubset = (animalsList, key)=>{
+    const vals = animalsList.map(a=> a.vals[key] ? a.vals[key].pct : null).filter(x=>x!==null && !isNaN(x));
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  };
+
+  const keysB = new Set(popB.catalog.map(v=>v.key));
+  const commonKeys = popA.catalog.filter(v=>keysB.has(v.key));
+
+  compIdxRadarCharts.forEach(c=>c.destroy());
+  compIdxRadarCharts = [];
+  const labelA = `${popA.label} — ${bandA}`;
+  const labelB = `${popB.label} — ${bandB}`;
+
+  for(let c=0;c<3;c++){
+    const outerDiv = document.querySelector(`#compIdxRadarGrid > div:nth-child(${c+1})`);
+    const vars = commonKeys.filter(v=>v.category===c);
+    if(!vars.length){
+      outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="empty-hint" style="padding:40px 0;">Sin variables en esta categoría</div>`;
+      continue;
+    }
+    outerDiv.innerHTML = `<div style="font-weight:700;font-size:12.5px;color:var(--navy);margin-bottom:6px;text-align:center;">${CATS[c]}</div><div class="chart-box"><canvas id="compIdxRadar-${c}"></canvas></div>`;
+    const canvas = document.getElementById('compIdxRadar-'+c);
+    const chart = new Chart(canvas, {
+      type:'radar',
+      data:{
+        labels: vars.map(v=>v.key),
+        datasets:[
+          { label:labelA, data: vars.map(v=>avgPctSubset(animalsA, v.key)), borderColor:'#5b9bd5', backgroundColor:'#5b9bd522', pointBackgroundColor:'#5b9bd5', borderWidth:2 },
+          { label:labelB, data: vars.map(v=>avgPctSubset(animalsB, v.key)), borderColor:'#d99a4e', backgroundColor:'#d99a4e22', pointBackgroundColor:'#d99a4e', borderWidth:2 }
+        ]
+      },
+      options:{
+        animation:false, responsive:true, maintainAspectRatio:false,
+        scales:{ r:{ min:0, max:100, reverse:true, ticks:{stepSize:25, font:{size:8}, backdropColor:'transparent'}, pointLabels:{font:{size:9}} } },
+        plugins:{ legend:{position:'bottom', labels:{font:{size:9.5}, boxWidth:10}} }
+      }
+    });
+    compIdxRadarCharts.push(chart);
+  }
+}
+document.getElementById('btnGraficarCompIdxRadar').addEventListener('click', renderCompIdxRadar);
+
 </script>
 
 <script>
