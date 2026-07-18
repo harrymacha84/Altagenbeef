@@ -429,6 +429,10 @@ table.cfgtable tr:hover td{ background:#fafbfe; }
           </div>
 
           <h2 style="margin-top:26px;">Detalle por animal — <span id="idxWeightSum"></span></h2>
+          <div class="sub">🟢 Categoría resaltada en verde = Peso al Nacer y FPD ambos con percentil menor a 15: alta facilidad de parto, animales recomendados para servicio de vaquillonas.</div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; margin:8px 0 12px; cursor:pointer;">
+            <input type="checkbox" id="chkSoloFacilidadParto"> Mostrar solo animales con facilidad de parto (🟢)
+          </label>
           <table class="results-table" id="idxResultsTable">
             <thead><tr id="idxResultsTableHead"></tr></thead>
             <tbody></tbody>
@@ -1327,8 +1331,8 @@ function renderIdxVarTable(){
       <td><input type="number" class="idxWeight" data-idx="${idx}" min="0" max="100" value="0"></td>
       <td>
         <div class="sign-toggle" data-idx="${idx}">
-          <button type="button" class="pos active" data-sign="1" title="Prioriza animales con el NÚMERO de percentil/valor más alto en este rasgo">Busco ALTO ↑</button>
-          <button type="button" class="neg" data-sign="-1" title="Prioriza animales con el NÚMERO de percentil/valor más bajo en este rasgo">Busco BAJO ↓</button>
+          <button type="button" class="pos" data-sign="1" title="Prioriza animales con el NÚMERO de percentil/valor más alto en este rasgo">Busco ALTO ↑</button>
+          <button type="button" class="neg active" data-sign="-1" title="Prioriza animales con el NÚMERO de percentil/valor más bajo en este rasgo">Busco BAJO ↓</button>
         </div>
       </td>`;
     tbody.appendChild(tr);
@@ -1555,15 +1559,42 @@ function renderIdxResults(results, config, normMode){
   // ---- tabla detalle por animal ----
   const detHeadTr = document.getElementById('idxResultsTableHead');
   detHeadTr.innerHTML = `<th>#</th><th>ID</th><th>Nombre</th><th>Categoría</th><th>Índice</th>` + config.map(traitTh).join('');
-  const tbody = document.querySelector('#idxResultsTable tbody');
-  tbody.innerHTML = results.map((r,i)=>`
-    <tr><td class="rank">${i+1}</td><td>${r.id}</td><td>${r.nombre||'—'}</td><td>${r.categ}</td><td><b>${fmt(r.idx)}</b></td>
-    ${config.map(c=>`<td>${r.traits[c.key]===null?'-':fmt(r.traits[c.key])}</td>`).join('')}
-    </tr>`).join('');
+  renderDetailTableBody(results, config);
 
   renderRankRadars();
   renderIdxScatter();
   document.getElementById('idxResultsWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function renderDetailTableBody(results, config){
+  const soloFacilidad = document.getElementById('chkSoloFacilidadParto').checked;
+  const filtered = soloFacilidad ? results.filter(r=> isFacilidadPartoDestacada(r.id)) : results;
+  const tbody = document.querySelector('#idxResultsTable tbody');
+  if(!filtered.length){
+    tbody.innerHTML = `<tr><td colspan="${5+config.length}" class="empty-hint">Ningún animal cumple Peso al Nacer y FPD &lt; 15.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map((r,i)=>{
+    const destacado = isFacilidadPartoDestacada(r.id);
+    const categStyle = destacado ? ' style="background:#c6f0d2; font-weight:800; color:#1e7a3c;" title="Peso al Nacer y FPD < 15: alta facilidad de parto, apto para vaquillonas"' : '';
+    return `
+    <tr><td class="rank">${i+1}</td><td>${r.id}</td><td>${r.nombre||'—'}</td><td${categStyle}>${r.categ}${destacado?' 🟢':''}</td><td><b>${fmt(r.idx)}</b></td>
+    ${config.map(c=>`<td>${r.traits[c.key]===null?'-':fmt(r.traits[c.key])}</td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+document.getElementById('chkSoloFacilidadParto').addEventListener('change', ()=>{
+  if(lastIdxResults) renderDetailTableBody(lastIdxResults.results, lastIdxResults.config);
+});
+
+// Peso al Nacer y FPD ambos con percentil < 15 (Zoetis: número bajo = superior en ese rasgo) =
+// animal de alta facilidad de parto, recomendado para servicio de vaquillonas.
+function isFacilidadPartoDestacada(animalId){
+  const a = animals.find(x=>x.id===animalId);
+  if(!a) return false;
+  const pn = a.vals['Peso al Nacer'] ? a.vals['Peso al Nacer'].pct : null;
+  const fpd = a.vals['FPD'] ? a.vals['FPD'].pct : null;
+  return pn!==null && fpd!==null && pn<15 && fpd<15;
 }
 
 const RANK_BAND_COLORS = { 'Top 10%':'#1e7a3c', 'Top 25%':'#5b9bd5', 'Media':'#8c8c8c', 'Peor 25%':'#e0973c', 'Peor 10%':'#c0392b' };
@@ -1792,8 +1823,8 @@ document.getElementById('btnExportIdxExcel').addEventListener('click', ()=>{
   const modeLabel = EXPORT_MODE_LABELS[normMode] || normMode;
 
   const detRows = [['Normalización:', modeLabel], [],
-    ['#','ID','Nombre','Sexo','Categoría','Índice', ...config.map(c=>c.key+(c.sign===1?' ↑':' ↓'))]];
-  results.forEach((r,i)=> detRows.push([i+1, r.id, r.nombre||'', r.sexo||'', r.categ, Number(r.idx.toFixed(2)),
+    ['#','ID','Nombre','Sexo','Categoría','Facilidad de Parto (Vaquillona)','Índice', ...config.map(c=>c.key+(c.sign===1?' ↑':' ↓'))]];
+  results.forEach((r,i)=> detRows.push([i+1, r.id, r.nombre||'', r.sexo||'', r.categ, isFacilidadPartoDestacada(r.id)?'SÍ':'', Number(r.idx.toFixed(2)),
     ...config.map(c=> r.traits[c.key]===null?'':Number(r.traits[c.key].toFixed(2)))]));
   const wsDet = XLSX.utils.aoa_to_sheet(detRows);
 
@@ -1871,7 +1902,21 @@ document.getElementById('btnExportIdxPdf').addEventListener('click', ()=>{
   const rankRows = results.map((r,i)=>[i+1, r.id, r.nombre||'-', r.categ, fmt0(r.idx), ...config.map(c=> fmt0(r.traits[c.key]))]);
   doc.setFontSize(11); doc.setTextColor(11,20,66);
   doc.text('Detalle por animal:', 14, 16);
-  doc.autoTable({ startY:20, head:[['#','ID','Nombre','Categ.','Índice', ...config.map(pdfTraitHead)]], body:rankRows, styles:{fontSize:7.5}, headStyles:{fillColor:[217,154,78], fontSize:7.5}, margin:{left:14,right:14}, tableWidth: pageW-28 });
+  doc.text('Verde en Categoría = Peso al Nacer y FPD < 15 (alta facilidad de parto, apto vaquillonas)', 14, 21);
+  doc.autoTable({
+    startY:24, head:[['#','ID','Nombre','Categ.','Índice', ...config.map(pdfTraitHead)]], body:rankRows,
+    styles:{fontSize:7.5}, headStyles:{fillColor:[217,154,78], fontSize:7.5}, margin:{left:14,right:14}, tableWidth: pageW-28,
+    didParseCell: (data)=>{
+      if(data.section==='body' && data.column.index===3){
+        const animalId = data.row.raw[1];
+        if(isFacilidadPartoDestacada(animalId)){
+          data.cell.styles.fillColor = [198,240,210];
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.textColor = [30,122,60];
+        }
+      }
+    }
+  });
 
   doc.save(`Indice_Seleccion_${client.replace(/[^a-z0-9]+/gi,'_')}.pdf`);
 });
@@ -2410,14 +2455,12 @@ document.getElementById('btnGraficarCompIdxRadar').addEventListener('click', ren
    PWA: instalación + recepción de archivo compartido (WhatsApp)
 ============================================================ */
 
-// 1. Registrar el service worker (necesario para instalar y para recibir el share)
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('./service-worker.js').catch(e=>console.error('No se pudo registrar el service worker:', e));
   });
 }
 
-// 2. Botón "Instalar app" (aparece solo si el navegador ofrece la instalación)
 let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault();
@@ -2438,12 +2481,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   }
 });
 
-// 3. Recibir el Excel compartido desde WhatsApp (u otra app) vía Web Share Target
-//    En vez de cargarlo directo, se muestra un selector para elegir el destino
-//    (Informe/Índice, Población A o Población B), así se pueden reenviar dos
-//    archivos seguidos para compararlos. Población A/B además quedan
-//    guardadas en localStorage, para sobrevivir a la recarga que provoca
-//    cada share.
 function openShareDB(){
   return new Promise((resolve,reject)=>{
     const req = indexedDB.open('altagen-share-db', 1);
@@ -2453,7 +2490,7 @@ function openShareDB(){
   });
 }
 let pendingSharedFile = null;
-let shareFileReady = null; // guarda el archivo hasta que la licencia esté activada
+let shareFileReady = null;
 
 async function loadSharedFileIfAny(){
   if(new URLSearchParams(location.search).get('shared') !== '1') return;
@@ -2500,7 +2537,7 @@ document.getElementById('shareChooseInforme').addEventListener('click', ()=>{
   const file = pendingSharedFile;
   hideShareChooser();
   document.querySelector('.tabbtn[data-tab="tab-informe"]').click();
-  handleFile(file); // reutiliza la carga manual normal
+  handleFile(file);
 });
 
 document.getElementById('shareChooseA').addEventListener('click', ()=>{
